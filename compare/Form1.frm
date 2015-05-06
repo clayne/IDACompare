@@ -541,6 +541,7 @@ Begin VB.Form Form1
       _ExtentX        =   8652
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1D82
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -562,6 +563,7 @@ Begin VB.Form Form1
       _ExtentX        =   8599
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1DFE
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -679,12 +681,23 @@ Begin VB.Form Form1
          End
       End
       Begin VB.Menu mnuRemoveMain 
-         Caption         =   "Remove"
+         Caption         =   "Hide"
          Begin VB.Menu mnuRemove 
             Caption         =   "Selected"
             Index           =   0
          End
          Begin VB.Menu mnuRemove 
+            Caption         =   "ExactCRC"
+            Index           =   1
+         End
+      End
+      Begin VB.Menu mnuDeleteMain 
+         Caption         =   "Delete"
+         Begin VB.Menu mnuDelete 
+            Caption         =   "Selected"
+            Index           =   0
+         End
+         Begin VB.Menu mnuDelete 
             Caption         =   "ExactCRC"
             Index           =   1
          End
@@ -877,7 +890,7 @@ Private Declare Function ReleaseCapture Lib "user32" () As Long
     If KeyCode = 46 Then 'del key
         For i = tlv.ListItems.Count To 1 Step -1
             Set li = tlv.ListItems(i)
-            If li.Selected Then tlv.ListItems.Remove li.index
+            If li.Selected Then tlv.ListItems.Remove li.Index
         Next
     End If
 End Sub
@@ -890,7 +903,7 @@ Private Sub lv1_KeyDown(KeyCode As Integer, Shift As Integer)
     If KeyCode = 46 Then 'del key
         For i = tlv.ListItems.Count To 1 Step -1
             Set li = tlv.ListItems(i)
-            If li.Selected Then tlv.ListItems.Remove li.index
+            If li.Selected Then tlv.ListItems.Remove li.Index
         Next
     End If
 End Sub
@@ -903,9 +916,41 @@ Private Sub lvExact_KeyDown(KeyCode As Integer, Shift As Integer)
     If KeyCode = 46 Then 'del key
         For i = tlv.ListItems.Count To 1 Step -1
             Set li = tlv.ListItems(i)
-            If li.Selected Then tlv.ListItems.Remove li.index
+            If li.Selected Then tlv.ListItems.Remove li.Index
         Next
     End If
+End Sub
+
+Private Sub mnuDelete_Click(Index As Integer)
+    
+    On Error Resume Next
+    Dim li As ListItem
+    Dim i As Long
+    Dim handleIt As Boolean
+    Dim hits As Long
+    Dim x
+    
+    For i = lvExact.ListItems.Count To 1 Step -1
+    
+        handleIt = False
+        Set li = lvExact.ListItems(i)
+        Select Case Index
+            Case 0: If li.Selected Then handleIt = True
+            Case 1: If li.SubItems(4) = "Exact CRC" Then handleIt = True
+        End Select
+        
+        If handleIt Then
+               x = Split(li.Tag, ",")
+               cn.Execute "Delete from a where autoid=" & x(0)
+               cn.Execute "Delete from b where autoid=" & x(1)
+               lvExact.ListItems.Remove li.Index
+               hits = hits + 1
+        End If
+        
+    Next
+    
+    lblMatched.caption = "Deleted: " & hits
+    
 End Sub
 
 Private Sub mnuLVPrefixAll_Click()
@@ -943,7 +988,7 @@ Private Sub mnuLVPrefixAll_Click()
                 
 End Sub
 
-Private Sub mnuRemove_Click(index As Integer)
+Private Sub mnuRemove_Click(Index As Integer)
     
     On Error Resume Next
     Dim li As ListItem
@@ -951,9 +996,9 @@ Private Sub mnuRemove_Click(index As Integer)
  
     For i = lvExact.ListItems.Count To 1 Step -1
         Set li = lvExact.ListItems(i)
-        Select Case index
-            Case 0: If li.Selected Then lvExact.ListItems.Remove li.index
-            Case 1: If li.SubItems(4) = "Exact CRC" Then lvExact.ListItems.Remove li.index
+        Select Case Index
+            Case 0: If li.Selected Then lvExact.ListItems.Remove li.Index
+            Case 1: If li.SubItems(4) = "Exact CRC" Then lvExact.ListItems.Remove li.Index
         End Select
     Next
     
@@ -961,13 +1006,13 @@ Private Sub mnuRemove_Click(index As Integer)
     
 End Sub
 
-Private Sub mnuSelect_Click(index As Integer)
+Private Sub mnuSelect_Click(Index As Integer)
     
     On Error Resume Next
     Dim li As ListItem
     
     For Each li In lvExact.ListItems
-        Select Case index
+        Select Case Index
             Case 0: li.Selected = True
             Case 1: li.Selected = False
             Case 2: li.Selected = Not li.Selected
@@ -982,8 +1027,8 @@ Private Sub mnuSelect_Click(index As Integer)
     
 End Sub
 
-Private Sub optWinMergeFilter_Click(index As Integer)
-    SaveSetting "winmerge", "settings", "defaultFilter", index
+Private Sub optWinMergeFilter_Click(Index As Integer)
+    SaveSetting "winmerge", "settings", "defaultFilter", Index
 End Sub
 
 'splitter code
@@ -1052,19 +1097,19 @@ Private Sub cmdBreakMatch_Click()
    
    Set li = lv1.ListItems.Add(, "id:" & c.autoid)
    li.Tag = c.autoid
-   li.Text = c.index
+   li.Text = c.Index
    li.SubItems(1) = c.Length
    li.SubItems(2) = c.Name
    li.SubItems(3) = c.mCRC
    
    Set li = lv2.ListItems.Add(, "id:" & h.autoid)
    li.Tag = h.autoid
-   li.Text = h.index
+   li.Text = h.Index
    li.SubItems(1) = h.Length
    li.SubItems(2) = h.Name
    li.SubItems(3) = h.mCRC
    
-   lvExact.ListItems.Remove sel_exact.index
+   lvExact.ListItems.Remove sel_exact.Index
    Set sel_exact = Nothing
    cmdBreakMatch.Enabled = False
             
@@ -1151,7 +1196,7 @@ Private Sub lvExact_KeyPress(KeyAscii As Integer)
     End If
     If Chr(KeyAscii) = "x" Then
         Dim i As Long
-        i = lvExact.SelectedItem.index
+        i = lvExact.SelectedItem.Index
         lvExact.ListItems.Remove i
         lvExact.ListItems(i).Selected = True
         lvExact_ItemClick lvExact.SelectedItem
@@ -1280,9 +1325,9 @@ Private Sub mnuSearchFor_Click()
     frmFind.Show
 End Sub
 
-Private Sub Command1_Click(index As Integer)
+Private Sub Command1_Click(Index As Integer)
         
-    ScrollPage txtA, txtB, CBool(index)
+    ScrollPage txtA, txtB, CBool(Index)
     
 End Sub
 
@@ -1425,8 +1470,8 @@ Private Sub cmdManualMatch_Click()
     m1.Add c
     m2.Add h
     
-    lv1.ListItems.Remove sel_1.index
-    lv2.ListItems.Remove sel_2.index
+    lv1.ListItems.Remove sel_1.Index
+    lv2.ListItems.Remove sel_2.Index
 
     Set li = lvExact.ListItems.Add
     li.Tag = c.li.Tag & "," & h.li.Tag
@@ -1627,10 +1672,10 @@ Sub LoadList(lv As ListView, mode As CompareModes, Optional minLen As Long = 30,
             c.Length = rs!leng
             c.autoid = rs!autoid
             c.Name = rs!fname
-            c.index = rs!index
+            c.Index = rs!Index
 
             li.Tag = c.autoid
-            li.Text = pad(rs!index, 3)
+            li.Text = pad(rs!Index, 3)
             li.SubItems(1) = pad(c.Length)
             li.SubItems(2) = c.Name
             li.SubItems(3) = c.mCRC
@@ -2381,9 +2426,9 @@ hell:
         
 End Sub
 
-Private Sub mnuRename_Click(index As Integer)
+Private Sub mnuRename_Click(Index As Integer)
     
-    If index = 3 Then GoTo helpmsg
+    If Index = 3 Then GoTo helpmsg
     
     If lvExact.ListItems.Count < 1 Then
         MsgBox "There are no matchs to port!", vbInformation
@@ -2397,7 +2442,7 @@ Private Sub mnuRename_Click(index As Integer)
     
     For Each li In lvExact.ListItems
         tags = Split(li.Tag, ",") 'autoid1, autoid2
-        Select Case index
+        Select Case Index
             Case 0: 'sequential rename of matchs - disabled for sigscan mode
                 i = i + 1
                 cn.Execute "Update a set newName='match_" & i & "' where autoid=" & tags(0)
