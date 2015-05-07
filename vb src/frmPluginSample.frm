@@ -2,20 +2,74 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmIDACompare 
    Caption         =   "IDA Compare"
-   ClientHeight    =   3555
+   ClientHeight    =   3915
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8415
+   ClientWidth     =   8535
    Icon            =   "frmPluginSample.frx":0000
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3555
-   ScaleWidth      =   8415
+   ScaleHeight     =   3915
+   ScaleWidth      =   8535
    StartUpPosition =   2  'CenterScreen
+   Begin VB.TextBox txtFilter 
+      Height          =   330
+      Left            =   2790
+      TabIndex        =   15
+      Top             =   495
+      Width           =   3930
+   End
+   Begin MSComctlLib.ListView lvFiltered 
+      Height          =   1320
+      Left            =   2700
+      TabIndex        =   13
+      Top             =   1305
+      Visible         =   0   'False
+      Width           =   2835
+      _ExtentX        =   5001
+      _ExtentY        =   2328
+      View            =   3
+      LabelEdit       =   1
+      MultiSelect     =   -1  'True
+      LabelWrap       =   -1  'True
+      HideSelection   =   -1  'True
+      FullRowSelect   =   -1  'True
+      GridLines       =   -1  'True
+      _Version        =   393217
+      ForeColor       =   -2147483640
+      BackColor       =   -2147483643
+      BorderStyle     =   1
+      Appearance      =   1
+      NumItems        =   5
+      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Text            =   "n"
+         Object.Width           =   529
+      EndProperty
+      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   1
+         Text            =   "Start EA"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   2
+         Text            =   "End EA"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   3
+         Text            =   "Length"
+         Object.Width           =   1235
+      EndProperty
+      BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   4
+         Text            =   "Func Name"
+         Object.Width           =   3351
+      EndProperty
+   End
    Begin MSComctlLib.ProgressBar pb 
       Height          =   255
       Left            =   2100
       TabIndex        =   8
-      Top             =   3240
+      Top             =   3645
       Width           =   6255
       _ExtentX        =   11033
       _ExtentY        =   450
@@ -47,7 +101,7 @@ Begin VB.Form frmIDACompare
       Width           =   5595
    End
    Begin VB.Frame Frame1 
-      Height          =   3135
+      Height          =   3450
       Left            =   0
       TabIndex        =   1
       Top             =   420
@@ -57,16 +111,16 @@ Begin VB.Form frmIDACompare
          Height          =   375
          Left            =   120
          TabIndex        =   12
-         Top             =   2640
+         Top             =   2970
          Width           =   1815
       End
       Begin VB.CommandButton cmdCompare 
          Caption         =   "Launch Signature Scan"
          Height          =   375
          Index           =   1
-         Left            =   120
+         Left            =   135
          TabIndex        =   11
-         Top             =   2040
+         Top             =   2340
          Width           =   1815
       End
       Begin VB.CommandButton cmdAddSignature 
@@ -74,7 +128,7 @@ Begin VB.Form frmIDACompare
          Height          =   375
          Left            =   120
          TabIndex        =   10
-         Top             =   1620
+         Top             =   1845
          Width           =   1815
       End
       Begin VB.CommandButton cmdCompare 
@@ -83,16 +137,16 @@ Begin VB.Form frmIDACompare
          Index           =   0
          Left            =   120
          TabIndex        =   9
-         Top             =   1020
+         Top             =   1170
          Width           =   1815
       End
       Begin VB.CommandButton cmdExport 
          Caption         =   "Save Compare Snap 2"
          Height          =   375
          Index           =   1
-         Left            =   120
+         Left            =   135
          TabIndex        =   7
-         Top             =   600
+         Top             =   675
          Width           =   1815
       End
       Begin VB.CommandButton cmdExport 
@@ -111,8 +165,8 @@ Begin VB.Form frmIDACompare
          Index           =   1
          X1              =   180
          X2              =   1800
-         Y1              =   2520
-         Y2              =   2520
+         Y1              =   2835
+         Y2              =   2835
       End
       Begin VB.Line Line1 
          BorderColor     =   &H00404040&
@@ -121,15 +175,15 @@ Begin VB.Form frmIDACompare
          Index           =   0
          X1              =   180
          X2              =   1800
-         Y1              =   1500
-         Y2              =   1500
+         Y1              =   1665
+         Y2              =   1665
       End
    End
    Begin MSComctlLib.ListView lv 
       Height          =   2715
       Left            =   2100
       TabIndex        =   0
-      Top             =   480
+      Top             =   885
       Width           =   6255
       _ExtentX        =   11033
       _ExtentY        =   4789
@@ -170,6 +224,14 @@ Begin VB.Form frmIDACompare
          Text            =   "Func Name"
          Object.Width           =   3351
       EndProperty
+   End
+   Begin VB.Label Label2 
+      Caption         =   "Filter"
+      Height          =   240
+      Left            =   2205
+      TabIndex        =   14
+      Top             =   540
+      Width           =   465
    End
    Begin VB.Label Label1 
       Caption         =   "Current MDB"
@@ -508,6 +570,7 @@ Private Sub Form_Load()
     Me.Move (Screen.Width / 2) - (Me.Width / 2), _
             (Screen.Height / 2) - (Me.Height / 2)
     
+    lvFiltered.Move lv.Left, lv.top, lv.Width, lv.Height
     
     Dim h As Long
     
@@ -552,7 +615,14 @@ Sub DoExport(mode As ExportModes)
     Dim cnt As Long
     Dim idb As String
     Dim li As ListItem
-
+    Dim selLv As ListView
+    
+    If lvFiltered.Visible Then
+        Set selLv = lvFiltered
+    Else
+         Set selLv = lv
+    End If
+    
     If mode >= SignatureMode Then
         pth = DllPath & "signatures.mdb"
         'MsgBox "Signature mode db=" & pth & " Exists?: " & FileExists(pth)
@@ -590,14 +660,14 @@ Sub DoExport(mode As ExportModes)
     End If
 
     pb.Value = 0
-    pb.Max = lv.ListItems.count
+    pb.Max = selLv.ListItems.count
 
     'idb = FileNameFromPath(loadedFile)
     idb = LoadedFile()
     If Len(idb) > 254 Then idb = Right(idb, 254) 'in case its a binary of the same name but different paths...
     If Len(idb) = 0 Then idb = "sample" 'maybe they loaded a lib file?
 
-    For Each li In lv.ListItems
+    For Each li In selLv.ListItems
 
         If mode = SignatureMode And Not li.Selected Then GoTo nextOne
 
@@ -684,3 +754,48 @@ Private Sub txtDB_OLEDragDrop(Data As DataObject, Effect As Long, Button As Inte
     On Error Resume Next
     txtDB = Data.Files(1)
 End Sub
+
+Private Sub txtFilter_Change()
+    
+    On Error Resume Next
+    
+    If Len(txtFilter) = 0 Then
+        lvFiltered.Visible = False
+        Exit Sub
+    End If
+    
+    lvFiltered.ListItems.Clear
+    lvFiltered.Visible = True
+    
+    pb.Value = 0
+    pb.Max = lv.ListItems.count
+
+    Dim li As ListItem
+    For Each li In lv.ListItems
+        If InStr(1, li.SubItems(4), txtFilter, vbTextCompare) > 0 Then
+            copyLiToFiltered li
+        End If
+        If pb.Max > 500 And pb.Value Mod 10 = 0 Then
+            'only useful for large sample sets.. otherwise just slows us down..
+            pb.Value = pb.Value + 1
+        End If
+    Next
+    
+    pb.Value = 0
+    
+End Sub
+
+
+Sub copyLiToFiltered(li As ListItem)
+    Dim lif As ListItem
+    Dim i As Long
+    On Error Resume Next
+    
+    Set lif = lvFiltered.ListItems.Add(, , li.Text)
+    
+    For i = 1 To lv.ColumnHeaders.count
+        lif.SubItems(i) = li.SubItems(i)
+    Next
+    
+End Sub
+
