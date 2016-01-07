@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}#1.0#0"; "msscript.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "RICHTX32.OCX"
+Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "richtx32.ocx"
 Begin VB.Form Form1 
    Caption         =   "IDACompare"
    ClientHeight    =   9195
@@ -543,6 +543,7 @@ Begin VB.Form Form1
       _ExtentX        =   8652
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1D82
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -564,6 +565,7 @@ Begin VB.Form Form1
       _ExtentX        =   8599
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1DFE
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -661,6 +663,9 @@ Begin VB.Form Form1
       Begin VB.Menu mnuDeleteUpperSelected 
          Caption         =   "Delete Selected   ( Del )"
       End
+      Begin VB.Menu mnuUpperCopyAll 
+         Caption         =   "Copy All"
+      End
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
@@ -681,6 +686,10 @@ Begin VB.Form Form1
          Begin VB.Menu mnuSelect 
             Caption         =   "Default names"
             Index           =   3
+         End
+         Begin VB.Menu mnuSelect 
+            Caption         =   "Like"
+            Index           =   4
          End
       End
       Begin VB.Menu mnuRemoveMain 
@@ -937,7 +946,12 @@ Private Sub lvExact_KeyDown(KeyCode As Integer, Shift As Integer)
             Set li = tlv.ListItems(i)
             If li.Selected Then tlv.ListItems.Remove li.index
         Next
+        UpdateMatchedCount
     End If
+End Sub
+
+Private Sub UpdateMatchedCount()
+    lblMatched.caption = "Matched: " & lvExact.ListItems.Count
 End Sub
 
 Private Sub mnuDelete_Click(index As Integer)
@@ -968,7 +982,8 @@ Private Sub mnuDelete_Click(index As Integer)
         
     Next
     
-    lblMatched.caption = "Deleted: " & hits
+    'lblMatched.caption = "Deleted: " & hits
+    UpdateMatchedCount
     
 End Sub
 
@@ -1037,6 +1052,12 @@ Private Sub mnuSelect_Click(index As Integer)
     
     On Error Resume Next
     Dim li As ListItem
+    Dim match As String
+    
+    If index = 4 Then
+        match = InputBox("Select all like", , "*")
+        If Len(match) = 0 Then Exit Sub
+    End If
     
     For Each li In lvExact.ListItems
         Select Case index
@@ -1049,8 +1070,25 @@ Private Sub mnuSelect_Click(index As Integer)
                     Else
                         li.Selected = IIf(VBA.left(li.Text, 4) = "sub_", True, False)
                     End If
+            Case 4:
+                    If li.Text Like match Then li.Selected = True
+                    
         End Select
     Next
+    
+End Sub
+
+Private Sub mnuUpperCopyAll_Click()
+    Dim x As String
+    
+    If selLV Is lv1 Then
+        x = GetAllElements(lv1)
+    ElseIf selLV Is lv2 Then
+        x = GetAllElements(lv2)
+    End If
+    
+    Clipboard.Clear
+    Clipboard.SetText x
     
 End Sub
 
@@ -2184,7 +2222,7 @@ Sub LoadDataBase(pth As String)
     push r, "Percent:  " & pcent
     push r, "Elapsed Time: " & (endTime - startTime) \ 1000 & "secs"
     
-    txtData = Join(r, vbCrLf) & vbCrLf & Join(stats, vbCrLf)
+    txtData = lblDBA & vbCrLf & lblDBB & vbCrLf & Join(r, vbCrLf) & vbCrLf & Join(stats, vbCrLf)
     
     idaClient.EnumIDAWindows
     idaHwndA = idaClient.FindHwndForIDB(fullIDB_A)

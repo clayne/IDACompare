@@ -192,11 +192,13 @@ void __stdcall GetName(__int64 offset, char* buf, int bufsize){
 
 	if(strlen(buf) == 0){
 		func_t* f = get_func((ea_t)offset);
-		for(int i=0; i < f->llabelqty; i++){
-			if( f->llabels[i].ea == offset ){
-				int sz = strlen(f->llabels[i].name);
-				if(sz < bufsize) strcpy(buf,f->llabels[i].name);
-				return;
+		if(f != NULL){
+			for(int i=0; i < f->llabelqty; i++){
+				if( f->llabels[i].ea == offset ){
+					int sz = strlen(f->llabels[i].name);
+					if(sz < bufsize) strcpy(buf,f->llabels[i].name);
+					return;
+				}
 			}
 		}
 	}

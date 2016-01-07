@@ -10,7 +10,6 @@ integrate compare UI with IDASrvr so right click
   way to easy remove all of a certain match engine..
   in advanced winmerge keep arg_x markers
   may not be exporting chunked functions properly
-  select like
 
 
  

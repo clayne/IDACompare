@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form frmIDACompare 
    Caption         =   "IDA Compare"
    ClientHeight    =   3915
@@ -758,6 +758,8 @@ End Sub
 Private Sub txtFilter_Change()
     
     On Error Resume Next
+    Dim isNegatedSearch As Boolean
+    Dim filtText As String
     
     If Len(txtFilter) = 0 Then
         lvFiltered.Visible = False
@@ -770,11 +772,27 @@ Private Sub txtFilter_Change()
     pb.Value = 0
     pb.Max = lv.ListItems.count
 
+    If VBA.Left(txtFilter, 1) = "-" Then
+        If Len(txtFilter) = 1 Then Exit Sub
+        isNegatedSearch = True
+        filtText = Mid(txtFilter, 2)
+    Else
+        filtText = txtFilter
+    End If
+        
     Dim li As ListItem
     For Each li In lv.ListItems
-        If InStr(1, li.SubItems(4), txtFilter, vbTextCompare) > 0 Then
-            copyLiToFiltered li
+    
+        If isNegatedSearch Then
+            If InStr(1, li.SubItems(4), filtText, vbTextCompare) < 1 Then
+                copyLiToFiltered li
+            End If
+        Else
+            If InStr(1, li.SubItems(4), txtFilter, vbTextCompare) > 0 Then
+                copyLiToFiltered li
+            End If
         End If
+        
         If pb.Max > 500 And pb.Value Mod 10 = 0 Then
             'only useful for large sample sets.. otherwise just slows us down..
             pb.Value = pb.Value + 1
