@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmIDACompare 
    Caption         =   "IDA Compare"
    ClientHeight    =   3915
@@ -87,14 +87,14 @@ Begin VB.Form frmIDACompare
    Begin VB.CommandButton Command1 
       Caption         =   "new"
       Height          =   255
-      Left            =   6750
+      Left            =   6705
       TabIndex        =   4
       Top             =   120
       Width           =   735
    End
    Begin VB.TextBox txtDB 
       Height          =   315
-      Left            =   1140
+      Left            =   1125
       OLEDropMode     =   1  'Manual
       TabIndex        =   3
       Top             =   60
@@ -542,7 +542,8 @@ Private Sub Command1_Click()
 
     FileCopy base, pth
     txtDB = pth
-
+    SaveSetting "IdaCompare", "settings", "txtdb", txtDB.Text
+    
     exportedA = False
     exportedB = False
 
@@ -558,6 +559,7 @@ Private Sub Command2_Click()
     exportedA = False
     exportedB = False
     txtDB = pth
+    SaveSetting "IdaCompare", "settings", "txtdb", txtDB.Text
 End Sub
 
 
@@ -581,6 +583,9 @@ Private Sub Form_Load()
     'End If
     
     x64Mode = IIf(h = 0, True, False)
+    
+    txtDB = GetSetting("IdaCompare", "settings", "txtdb")
+    If Not FileExists(txtDB) Then txtDB = Empty
     
     Me.Caption = Me.Caption & IIf(h = 0, " (64 bit)", " (32 Bit)")
     
@@ -649,7 +654,8 @@ Sub DoExport(mode As ExportModes)
     If mode < SignatureMode Then
         cnt = cn.Execute("Select count(autoid) as cnt from " & tbl)!cnt
         If cnt > 0 Then
-            If MsgBox("Table " & tbl & " is already full of data overwrite?", vbYesNo) = vbNo Then
+            idb = cn.Execute("Select top 1 idb from " & tbl)!idb
+            If MsgBox("Table " & tbl & " is already full of data overwrite?" & vbCrLf & vbCrLf & idb, vbYesNo) = vbNo Then
                 Exit Sub
             Else
                 cn.Execute "Delete from " & tbl

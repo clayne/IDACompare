@@ -543,7 +543,6 @@ Begin VB.Form Form1
       _ExtentX        =   8652
       _ExtentY        =   2725
       _Version        =   393217
-      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1D82
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -565,7 +564,6 @@ Begin VB.Form Form1
       _ExtentX        =   8599
       _ExtentY        =   2725
       _Version        =   393217
-      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1DFE
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -690,6 +688,10 @@ Begin VB.Form Form1
          Begin VB.Menu mnuSelect 
             Caption         =   "Like"
             Index           =   4
+         End
+         Begin VB.Menu mnuSelect 
+            Caption         =   "vcrt"
+            Index           =   5
          End
       End
       Begin VB.Menu mnuRemoveMain 
@@ -1020,7 +1022,7 @@ Private Sub mnuLVPrefixAll_Click()
     
     For Each li In selLV.ListItems
         newName = pFix & li.SubItems(2)
-        cn.Execute "Update " & tName & " set newName='" & newName & "' where autoid=" & li.Text
+        cn.Execute "Update " & tName & " set newName='" & newName & "' where index=" & Trim(li.Text)
         li.SubItems(2) = newName
     Next
     
@@ -1055,7 +1057,7 @@ Private Sub mnuSelect_Click(index As Integer)
     Dim match As String
     
     If index = 4 Then
-        match = InputBox("Select all like", , "*")
+        match = InputBox("Select all like (use [?] for literal ?)", , "*")
         If Len(match) = 0 Then Exit Sub
     End If
     
@@ -1072,6 +1074,9 @@ Private Sub mnuSelect_Click(index As Integer)
                     End If
             Case 4:
                     If li.Text Like match Then li.Selected = True
+            Case 5:
+                    If VBA.left(li.Text, 1) = "_" Or VBA.left(li.Text, 1) = "?" Then li.Selected = True
+                    If InStr(li.Text, "@") > 0 Then li.Selected = True
                     
         End Select
     Next
@@ -2222,7 +2227,9 @@ Sub LoadDataBase(pth As String)
     push r, "Percent:  " & pcent
     push r, "Elapsed Time: " & (endTime - startTime) \ 1000 & "secs"
     
-    txtData = lblDBA & vbCrLf & lblDBB & vbCrLf & Join(r, vbCrLf) & vbCrLf & Join(stats, vbCrLf)
+    txtData = Replace(lblDBA, "Unmatched ", Empty) & vbCrLf & _
+              Replace(lblDBB, "Unmatched ", Empty) & vbCrLf & _
+              Join(r, vbCrLf) & vbCrLf & Join(stats, vbCrLf)
     
     idaClient.EnumIDAWindows
     idaHwndA = idaClient.FindHwndForIDB(fullIDB_A)
