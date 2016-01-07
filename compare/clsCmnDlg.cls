@@ -93,6 +93,7 @@ Private Declare Function lstrcat Lib "kernel32" Alias "lstrcatA" (ByVal lpString
 Private Declare Function SHBrowseForFolder Lib "shell32" (lpbi As BrowseInfo) As Long
 Private Declare Function SHGetPathFromIDList Lib "shell32" (ByVal pidList As Long, ByVal lpBuffer As String) As Long
 Private Declare Sub CoTaskMemFree Lib "ole32.dll" (ByVal hMem As Long)
+Private Declare Function GetForegroundWindow Lib "user32" () As Long
 
 Private o As OPENFILENAME
 Private filters(6) As String
@@ -150,10 +151,9 @@ Function OpenDialog(filt As FilterTypes, Optional initDir As String, Optional ti
     
 End Function
 
-Function SaveDialog(filt As FilterTypes, Optional initDir As String, Optional title As String = "", Optional ConfirmOvewrite As Boolean = True, Optional pHwnd As Long = 0) As String
+Function SaveDialog(filt As FilterTypes, Optional initDir As String, Optional title As String = "", Optional ConfirmOvewrite As Boolean = True, Optional pHwnd As Long = 0, Optional defaultFileName As String) As String
     o.lStructSize = Len(o)
-    o.hWndOwner = pHwnd
-    o.hInstance = pHwnd
+    o.hWndOwner = GetForegroundWindow()
     o.lpstrFilter = filters(filt)
     o.lpstrFile = Space$(254)
     o.nMaxFile = 255
@@ -163,6 +163,10 @@ Function SaveDialog(filt As FilterTypes, Optional initDir As String, Optional ti
     o.lpstrTitle = title
     o.lpstrDefExt = extensions(filt)
     o.Flags = 0
+    If Len(defaultFileName) > 0 Then
+        o.lpstrFile = defaultFileName & Space$(254)
+        o.nMaxFile = Len(o.lpstrFile) + 1
+    End If
 
     Dim tmp As String
     tmp = IIf(GetSaveFileName(o), Trim$(o.lpstrFile), "")
@@ -175,6 +179,8 @@ Function SaveDialog(filt As FilterTypes, Optional initDir As String, Optional ti
     Else
        SaveDialog = tmp
     End If
+    
+    SaveDialog = Replace(SaveDialog, Chr(0), Empty)
     
     If Len(SaveDialog) = 0 And errOnCancel Then Err.Raise 1, "SaveDialog", "Cancel"
     
@@ -215,7 +221,7 @@ Function FolderDialog(Optional initDir As String, Optional pHwnd As Long = 0) As
         SHGetPathFromIDList ptrList, ret 'Get the path from the IDList
         CoTaskMemFree ptrList            'free the block of memory
         nullChar = InStr(ret, vbNullChar)
-        If nullChar > 0 Then ret = Left$(ret, nullChar - 1)
+        If nullChar > 0 Then ret = left$(ret, nullChar - 1)
     End If
 
     FolderDialog = ret

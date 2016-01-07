@@ -408,7 +408,7 @@ Begin VB.Form Form1
       Begin VB.Label lblMatched 
          Caption         =   "Matched Functions"
          Height          =   195
-         Left            =   150
+         Left            =   135
          TabIndex        =   8
          Top             =   330
          Width           =   1665
@@ -615,6 +615,9 @@ Begin VB.Form Form1
       Caption         =   "Tools"
       Begin VB.Menu mnuLoadDatabase 
          Caption         =   "Load New"
+      End
+      Begin VB.Menu mnuExport 
+         Caption         =   "Export Results"
       End
       Begin VB.Menu mnuRescanCurrent 
          Caption         =   "Rescan Current DB"
@@ -914,6 +917,7 @@ Private Declare Function ReleaseCapture Lib "user32" () As Long
                 tlv.ListItems.Remove li.index
             End If
         Next
+        lblDBB = "Unmatched 2: " & idb_b & " (" & lv2.ListItems.Count & " Remaining) "
     End If
 End Sub
 
@@ -935,6 +939,7 @@ Private Sub lv1_KeyDown(KeyCode As Integer, Shift As Integer)
                 tlv.ListItems.Remove li.index
             End If
         Next
+        lblDBA = "Unmatched 1: " & idb_a & " (" & lv1.ListItems.Count & " Unmatched) "
     End If
 End Sub
 
@@ -995,6 +1000,62 @@ Private Sub mnuDeleteUpperSelected_Click()
     ElseIf selLV Is lv2 Then
         lv2_KeyDown 46, 0
     End If
+End Sub
+
+Private Sub mnuExport_Click()
+    
+    On Error Resume Next
+    
+    Dim f As String, def As String
+    
+    If Len(currentMDB) = 0 Then Exit Sub
+    
+    If Len(idb_a) > 4 Then def = left(idb_a, 4) Else def = idb_a
+    def = def & "-"
+    If Len(idb_b) > 4 Then def = def & left(idb_b, 4) Else def = def & idb_b
+    def = def & "-cmp.txt"
+    
+    f = dlg.SaveDialog(AllFiles, fso.GetParentFolder(currentMDB), , , Me.hwnd, def)
+    If Len(f) = 0 Then Exit Sub
+    
+    Dim cf As New clsFileStream, li As ListItem
+    cf.fOpen f, otwriting
+    
+    cf.WriteBlankLine
+    cf.WriteLine "IDACompare v" & App.Major & "." & App.Minor & " - " & Now
+    cf.WriteLine "MDB: " & currentMDB & vbCrLf
+    
+    cf.WriteLine txtData & vbCrLf
+    
+    cf.WriteDivider
+    cf.WriteBlankLine
+    
+    cf.WriteLine lblDBA & vbCrLf
+    For Each li In lv1.ListItems
+        cf.WriteLine li.SubItems(2)
+    Next
+    
+    cf.WriteBlankLine
+    cf.WriteDivider
+    cf.WriteBlankLine
+    
+    cf.WriteLine lblDBB & vbCrLf
+    For Each li In lv2.ListItems
+        cf.WriteLine li.SubItems(2)
+    Next
+    
+    cf.WriteBlankLine
+    cf.WriteDivider
+    cf.WriteBlankLine
+    
+    cf.WriteLine lblMatched & vbCrLf
+    For Each li In lvExact.ListItems
+        cf.WriteLine pad(li.Text, 40, False) & vbTab & pad(li.SubItems(1), 40, False) & vbTab & li.SubItems(4)
+    Next
+    
+    cf.fClose
+    Shell "notepad.exe " & f, vbNormalFocus
+    
 End Sub
 
 Private Sub mnuLVPrefixAll_Click()

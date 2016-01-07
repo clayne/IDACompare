@@ -236,12 +236,16 @@ Sub push(ary, value) 'this modifies parent ary object
 init:     ReDim ary(0): ary(0) = value
 End Sub
  
-Function pad(v, Optional l As Long = 4)
+Function pad(v, Optional l As Long = 4, Optional lpad As Boolean = True)
     On Error GoTo hell
     Dim x As Long
     x = Len(v)
     If x < l Then
-        pad = String(l - x, " ") & v
+        If lpad Then
+            pad = String(l - x, " ") & v
+        Else
+            pad = v & String(l - x, " ")
+        End If
     Else
 hell:
         pad = v
