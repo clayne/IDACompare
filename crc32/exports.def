@@ -1,0 +1,4 @@
+LIBRARY 'crc32'
+EXPORTS
+	crc32
+	unicode_crc32

@@ -9,6 +9,7 @@ OutputBaseFilename=IDACompare_Setup
 OutputDir=./
 
 [Files]
+Source: crc32.dll; DestDir: {app}
 Source: IDA_Compare.plw; DestDir: {app}
 Source: IDA_Compare.p64; DestDir: {app}
 Source: IDASrvr.plw; DestDir: {app}

@@ -551,6 +551,7 @@ Begin VB.Form Form1
       _ExtentX        =   8652
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1D82
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -572,6 +573,7 @@ Begin VB.Form Form1
       _ExtentX        =   8599
       _ExtentY        =   2725
       _Version        =   393217
+      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1DFE
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -1714,8 +1716,7 @@ Private Sub Form_Load()
     
     On Error Resume Next
     
-    'old_cmp = False
-    'chkOldCmp.Visible = isIDE()
+    crc.init
     idaClient.Listen Me.hwnd
     mnuPopup.Visible = False
     mnuPopupRename.Visible = False
