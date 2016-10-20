@@ -29,49 +29,49 @@ Global HighLightRunning As Boolean
 
 Const LANG_US = 1049
 
-Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (pDest As Any, pSource As Any, ByVal ByteLen As Long)
-
-Public Function Clone(c As Collection) As Collection
-    
-    Dim cc As New Collection
-    Dim i As Long
-    
-    For i = 1 To c.Count
-        'If IsObject(c(i)) Then Err.Raise 256, , "CollectionEx.Clone: Can not clone a collection with object references"
-        cc.Add c(i), keyForIndex(c, i)
-    Next
-    
-    Set Clone = cc
-End Function
-
-Public Function keyForIndex(c As Collection, index As Long) As String
-    ' Get a key based on its index value.  Must be in range, or error.
-    Dim i     As Long
-    Dim Ptr   As Long
-    Dim sKey  As String
-    '
-    If index < 1 Or index > c.Count Then
-        Err.Raise 9
-        Exit Function
-    End If
-    '
-    If index <= c.Count / 2 Then                                ' Start from front.
-        CopyMemory Ptr, ByVal ObjPtr(c) + &H18, 4               ' First item pointer of collection header.
-        For i = 2 To index
-            CopyMemory Ptr, ByVal Ptr + &H18, 4                 ' Next item pointer of collection item.
-        Next i
-    Else                                                        ' Start from end and go back.
-        CopyMemory Ptr, ByVal ObjPtr(c) + &H1C, 4               ' Last item pointer of collection header.
-        For i = c.Count - 1 To index Step -1
-            CopyMemory Ptr, ByVal Ptr + &H14, 4                 ' Previous item pointer of collection item.
-        Next i
-    End If
-    '
-    i = StrPtr(sKey)                                            ' Save string pointer because we're going to borrow the string.
-    CopyMemory ByVal VarPtr(sKey), ByVal Ptr + &H10, 4          ' Key string of collection item.
-    keyForIndex = sKey                                          ' Move key into property's return.
-    CopyMemory ByVal VarPtr(sKey), i, 4                         ' Put string pointer back to keep memory straight.
-End Function
+'Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (pDest As Any, pSource As Any, ByVal ByteLen As Long)
+'
+'Public Function Clone(c As Collection) As Collection
+'
+'    Dim cc As New Collection
+'    Dim i As Long
+'
+'    For i = 1 To c.Count
+'        'If IsObject(c(i)) Then Err.Raise 256, , "CollectionEx.Clone: Can not clone a collection with object references"
+'        cc.Add c(i), keyForIndex(c, i)
+'    Next
+'
+'    Set Clone = cc
+'End Function
+'
+'Public Function keyForIndex(c As Collection, index As Long) As String
+'    ' Get a key based on its index value.  Must be in range, or error.
+'    Dim i     As Long
+'    Dim Ptr   As Long
+'    Dim sKey  As String
+'    '
+'    If index < 1 Or index > c.Count Then
+'        Err.Raise 9
+'        Exit Function
+'    End If
+'    '
+'    If index <= c.Count / 2 Then                                ' Start from front.
+'        CopyMemory Ptr, ByVal ObjPtr(c) + &H18, 4               ' First item pointer of collection header.
+'        For i = 2 To index
+'            CopyMemory Ptr, ByVal Ptr + &H18, 4                 ' Next item pointer of collection item.
+'        Next i
+'    Else                                                        ' Start from end and go back.
+'        CopyMemory Ptr, ByVal ObjPtr(c) + &H1C, 4               ' Last item pointer of collection header.
+'        For i = c.Count - 1 To index Step -1
+'            CopyMemory Ptr, ByVal Ptr + &H14, 4                 ' Previous item pointer of collection item.
+'        Next i
+'    End If
+'    '
+'    i = StrPtr(sKey)                                            ' Save string pointer because we're going to borrow the string.
+'    CopyMemory ByVal VarPtr(sKey), ByVal Ptr + &H10, 4          ' Key string of collection item.
+'    keyForIndex = sKey                                          ' Move key into property's return.
+'    CopyMemory ByVal VarPtr(sKey), i, 4                         ' Put string pointer back to keep memory straight.
+'End Function
 
 
 Sub rtfHighlightDecompile(c_src As String, tb As RichTextBox)

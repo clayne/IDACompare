@@ -39,13 +39,14 @@ Public index As Long
 Public Jumps As Long
 Public Pushs As Long
 Public mCRC As String
-'Public li As ListItem
 Public esp As Long
 Public MatchMethod As String
 Public fxCalls As New Collection   'of functions by name
 Public Constants As New Collection
 Public labels As New Collection
 Public Standardized As String
+
+'todo: extract strings
 
 Function StandardizeAsm(ByVal asm As String) As String
     

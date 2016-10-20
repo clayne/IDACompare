@@ -48,14 +48,6 @@ Begin VB.Form Form1
          TabIndex        =   13
          Top             =   60
          Width           =   6585
-         Begin VB.CheckBox chkOldCmp 
-            Caption         =   "old compare"
-            Height          =   240
-            Left            =   4770
-            TabIndex        =   35
-            Top             =   2925
-            Width           =   1635
-         End
          Begin VB.CheckBox chkEnforceMinSize 
             Caption         =   "Ignore functions < 30 Bytes"
             Height          =   285
@@ -809,7 +801,8 @@ Option Explicit
 'note if we could remove matched entries from a/b collections after a match, then subsequent match
 '  checks would have fewer functions to iteriate over (they arent checked again but they still have to be looped)
 '  not sure the complexity is worth the optimization...
-'
+'*** completed 10.19.16 in 4hrs 50% speed increase ***
+
 
 'to register file extension to open in this app..
 'homedir = homedir & "\ida_compare.exe"
@@ -836,7 +829,7 @@ Dim m2 As New Collection 'of matched cfunction from ibd2
 Dim a As New Collection 'of cfunction, all funcs for idb 1
 Dim b As New Collection 'of cfunction, all funcs for idb 2
 
-'Public old_cmp As Boolean   '1120 functions 96% match was 8 seconds, now 5 - 38% faster
+'Public old_cmp As Boolean   '1120 functions 96% match was 8 seconds, now 5 - 38% faster, now 4 - 50%
 Dim a_cmp As New Collection 'of cFunction, only the unmatched functions
 Dim b_cmp As New Collection 'of cFunction, only the unmatched functions
 
@@ -1661,13 +1654,11 @@ Sub LoadChkSettings(Optional load As Boolean = True)
             Set cc = c
             defVal = 1
             If cc.Name = chkExternalMatchScript.Name Then defVal = 0
-            If cc.Name <> chkOldCmp.Name Then
-                If load Then
-                    r = GetSetting("IDACompare", "settings", cc.Name, defVal)
-                    cc.value = r
-                Else
-                    Call SaveSetting("IDACompare", "settings", cc.Name, cc.value)
-                End If
+            If load Then
+                r = GetSetting("IDACompare", "settings", cc.Name, defVal)
+                cc.value = r
+            Else
+                Call SaveSetting("IDACompare", "settings", cc.Name, cc.value)
             End If
         End If
     Next
@@ -1758,10 +1749,9 @@ Private Sub Form_Load()
 End Sub
 
 
-Sub LoadList(lv As ListView, mode As CompareModes, Optional minLen As Long = 30, Optional clause = "")
+Sub LoadCollections(mode As CompareModes, Optional minLen As Long = 30, Optional clause = "")
     Dim r() As String
     Dim rs As Recordset
-    Dim li As ListItem
     Dim asm As String
     Dim idb As String
     
@@ -1808,43 +1798,29 @@ Sub LoadList(lv As ListView, mode As CompareModes, Optional minLen As Long = 30,
     While Not rs.EOF
         Set c = New CFunction
         asm = rs!disasm
-        c.StandardizeAsm asm
+        c.StandardizeAsm asm 'this is probably the main bottle neck right now...but it has to process allot of text and build stats
 
         If KeyExistsInCollection(IIf(isTableA, a, b), c.mCRC) Then
-            'c.ReHash asm
-            'If KeyExistsInCollection(IIf(isTableA, a, b), c.mCRC) Then
-                c.mCRC = HandleCRCDuplicate(IIf(isTableA, a, b), c.mCRC) 'using just this instead of rehash is much much better..
-                'While KeyExistsInCollection(IIf(isTableA, a, b), c.mCRC)
-                '    c.mCRC = "rand:" & RandomNum
-                'Wend
-            'End If
+             c.mCRC = HandleCRCDuplicate(IIf(isTableA, a, b), c.mCRC) 'using just this instead of rehash is much much better..
         End If
 
         If Len(c.mCRC) > 0 Then
-            'Set li = lv.ListItems.Add(, "id:" & rs!autoid)
-            'Set c.li = li
-
             c.Length = rs!leng
             c.autoid = rs!autoid
             c.Name = rs!fname
             c.index = rs!index
-
-            'li.Tag = c.autoid
-            'li.Text = pad(rs!index, 3)
-            'li.SubItems(1) = pad(c.Length)
-            'li.SubItems(2) = c.Name
-            'li.SubItems(3) = c.mCRC
-
             Err.Clear
 
             If mode = compare1 Or mode = TmpMode Then
                 a.Add c, c.mCRC               'collection "a" = function with crc as key
+                a_cmp.Add c, c.mCRC
             Else
                 b.Add c, c.mCRC
+                b_cmp.Add c, c.mCRC
             End If
 
-            If Err.Number > 0 Then
-                'Debug.Print "Length:" & li.SubItems(1) & " CRC:" & li.SubItems(3) & " Name: " & c.Name & " Err:" & Err.Description
+            If Err.Number <> 0 Then
+                Debug.Print "Length:" & c.Length & " CRC:" & c.mCRC & " Name: " & c.Name & " Err:" & Err.Description
                 Err.Clear
             End If
 
@@ -1903,19 +1879,8 @@ Function ExactCrcMatch() As Long
     
     Label1 = "CRC Matching"
 
-'If old_cmp Then
-'    For Each lit In lv1.ListItems
-'        If KeyExistsInCollection(b, lit.SubItems(3)) Then
-'            Set c = a(lit.SubItems(3))
-'            Set h = b(lit.SubItems(3))
-'            AddToMatchCollection c, h, "Exact CRC"
-'            ret = ret + 1
-'        End If
-'        pb.value = pb.value + 1
-'    Next
-'Else
     For i = a_cmp.Count To 1 Step -1
-        key = keyForIndex(a_cmp, i)
+        key = a_cmp(i).mCRC 'keyForIndex(a_cmp, i)
         If KeyExistsInCollection(b_cmp, key) Then
             Set c = a_cmp(key)
             Set h = b_cmp(key)
@@ -1926,7 +1891,6 @@ Function ExactCrcMatch() As Long
         End If
         If i Mod 50 = 0 Then pb.value = i
     Next
-'End If
 
     ExactCrcMatch = ret
     
@@ -1940,24 +1904,6 @@ Function NameMatch() As Long
     pb.value = 0
     Label1 = "Public Name Matching"
     
-'If old_cmp Then
-'    For Each c In a
-'        For Each h In b
-'            If Not c.matched And Not h.matched Then
-'                 If c.Name = h.Name _
-'                    And VBA.left(c.Name, 4) <> "sub_" _
-'                    And VBA.left(c.Name, 4) <> "unkn" _
-'                    And c.Name <> "start" _
-'                 Then
-'                    AddToMatchCollection c, h, "Name Match"
-'                    ret = ret + 1
-'                 End If
-'            End If
-'        Next
-'        pb.value = pb.value + 1
-'        DoEvents
-'    Next
-'Else
     For i = a_cmp.Count To 1 Step -1
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
@@ -1981,7 +1927,6 @@ Function NameMatch() As Long
             DoEvents
         End If
     Next
-'End If
 
     pb.value = 0
     NameMatch = ret
@@ -1994,24 +1939,6 @@ Function CallPushMatch() As Long
     pb.value = 0
     Label1 = "Call/Push Matching"
     
-'If old_cmp Then
-'    For Each c In a
-'        For Each h In b
-'            If Not c.matched And Not h.matched Then
-'                If c.Calls = h.Calls And c.Pushs = h.Pushs Then  'same num of calls and pushs
-'                    If isWithin(60, c.Length, h.Length, 80) Then     'and length is close
-'                        If isWithin(4, c.Jumps, h.Jumps) Then    'and num jmps is close
-'                           AddToMatchCollection c, h, "Call/Push Match"
-'                           ret = ret + 1
-'                        End If
-'                    End If
-'                 End If
-'            End If
-'        Next
-'        pb.value = pb.value + 1
-'        DoEvents
-'    Next
-'Else
     For i = a_cmp.Count To 1 Step -1
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
@@ -2035,7 +1962,6 @@ Function CallPushMatch() As Long
             DoEvents
         End If
     Next
-'End If
 
     pb.value = 0
     CallPushMatch = ret
@@ -2048,22 +1974,6 @@ Function EspMatch() As Long
       pb.value = 0
       Label1 = "ESP Matching"
       
-'If old_cmp Then
-'      For Each c In a
-'            For Each h In b
-'                If Not c.matched And Not h.matched Then
-'                     If isWithin(80, c.Length, h.Length, 80) Then
-'                        If c.esp <> 0 And c.esp = h.esp And isWithin(40, c.Length, h.Length) Then
-'                            AddToMatchCollection c, h, "ESP Match"
-'                            ret = ret + 1
-'                        End If
-'                     End If
-'                End If
-'            Next
-'            pb.value = pb.value + 1
-'            DoEvents
-'      Next
-'Else
     For i = a_cmp.Count To 1 Step -1
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
@@ -2085,7 +1995,6 @@ Function EspMatch() As Long
                 DoEvents
             End If
       Next
-'End If
 
       pb.value = 0
       EspMatch = ret
@@ -2100,34 +2009,6 @@ Function APIMatch() As Long
     pb.value = 0
     Label1 = "API Matching"
     
-'If old_cmp Then
-'     For Each c In a
-'        For Each h In b
-'            'not matched, same num of apicalls, within 15 bytes sizewise, and api called in same order
-'            If Not c.matched And Not h.matched Then
-'                If h.fxCalls.Count = c.fxCalls.Count And h.fxCalls.Count > 0 Then
-'                    'If isWithin(15, c.Length, h.Length) Then
-'                        j = 0
-'                        i = 0
-'                        For Each t In h.fxCalls
-'                            i = i + 1
-'                            If t = c.fxCalls(i) Then
-'                                j = j + 1
-'                            End If
-'                        Next
-'                        If j = h.fxCalls.Count Then
-'                            AddToMatchCollection c, h, "API Profile Match"
-'                            ret = ret + 1
-'                        End If
-'                    'End If
-'                End If
-'            End If
-'            DoEvents
-'        Next
-'        pb.value = pb.value + 1
-'        DoEvents
-'    Next
-'Else
     For ii = a_cmp.Count To 1 Step -1
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
@@ -2161,7 +2042,6 @@ Function APIMatch() As Long
             DoEvents
         End If
     Next
-'End If
 
     pb.value = 0
     APIMatch = ret
@@ -2176,30 +2056,6 @@ Function APIMatch2() As Long
     pb.value = 0
     Label1 = "API2 Matching"
     
-'If old_cmp Then
-'     For Each c In a
-'        For Each h In b
-'            If Not c.matched And Not h.matched Then
-'                If isWithin(4, h.fxCalls.Count, c.fxCalls.Count, 4) And _
-'                     isWithin(100, c.Length, h.Length) Then
-'                        j = 0
-'                        For Each t In h.fxCalls
-'                            For Each i In c.fxCalls
-'                                If t = i Then j = j + 1
-'                            Next
-'                        Next
-'                        If isWithin(4, j, h.fxCalls.Count, 3) Then
-'                            AddToMatchCollection c, h, "API Profile Match 2"
-'                            ret = ret + 1
-'                        End If
-'                End If
-'            End If
-'            DoEvents
-'        Next
-'        pb.value = pb.value + 1
-'        DoEvents
-'    Next
-'Else
     For ii = a_cmp.Count To 1 Step -1
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
@@ -2229,7 +2085,6 @@ Function APIMatch2() As Long
             DoEvents
         End If
     Next
-'End If
 
     pb.value = 0
     APIMatch2 = ret
@@ -2243,29 +2098,6 @@ Function ConstMatch() As Long
       pb.value = 0
       Label1 = "Const Matching"
       
-'If old_cmp Then
-'      For Each c In a
-'            For Each h In b
-'                If Not c.matched And Not h.matched Then
-'                     If isWithin(3, c.Constants.Count, h.Constants.Count, 1) And _
-'                          isWithin(60, c.Length, h.Length) Then
-'                                j = 0
-'                                For Each x In c.Constants
-'                                   If h.ConstantExists(x) Then j = j + 1
-'                                Next
-'
-'                                If isWithin(3, c.Constants.Count, j, 2) Then
-'                                    AddToMatchCollection c, h, "Const Match"
-'                                    ret = ret + 1
-'                                End If
-'
-'                     End If
-'                End If
-'            Next
-'            pb.value = pb.value + 1
-'            DoEvents
-'      Next
-'Else
     For ii = a_cmp.Count To 1 Step -1
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
@@ -2294,7 +2126,6 @@ Function ConstMatch() As Long
                 DoEvents
             End If
       Next
-'End If
 
       pb.value = 0
       ConstMatch = ret
@@ -2362,30 +2193,10 @@ Sub AddMatchs()
                 li.SubItems(2) = t & "," & u
             End If
             
-            'If j Mod 50 = 0 Then pb.value = j
+            If j Mod 50 = 0 Then pb.value = j - 1
             li.SubItems(3) = c.Calls & "/" & m2(j).Calls & " " & Hex(c.esp) & "/" & Hex(m2(j).esp)
     Next
-     
-'   ResetPB a.Count, "Trimming A"
-'
-'    For Each h In a
-'        If h.matched Then
-'            lv1.ListItems.Remove "id:" & h.autoid
-'        End If
-'        pb.value = pb.value + 1
-'    Next
-'
-'    If Not SigMode Then
-'        ResetPB b.Count, "Trimming B"
-'
-'        For Each h In b
-'            If h.matched Then
-'                lv2.ListItems.Remove "id:" & h.autoid
-'            End If
-'            pb.value = pb.value + 1
-'        Next
-'    End If
-    
+         
 End Sub
 
 Function LoadScript() As Boolean
@@ -2448,11 +2259,8 @@ Sub LoadDataBase(pth As String)
     Dim minLength As Long
     minLength = IIf(chkEnforceMinSize.value = 1, 30, 0)
        
-    LoadList lv1, IIf(SigMode, TmpMode, compare1), minLength ', , " and index=16"
-    LoadList lv2, IIf(SigMode, SignatureScan, compare2), minLength ', , " and index=21"
-    
-    Set a_cmp = Clone(a)
-    Set b_cmp = Clone(b)
+    LoadCollections IIf(SigMode, TmpMode, compare1), minLength   ', , " and index=16"
+    LoadCollections IIf(SigMode, SignatureScan, compare2), minLength  ', , " and index=21"
     
     push r, "Total functions " & a_cmp.Count & ":" & b_cmp.Count
     minFunctions = IIf(a_cmp.Count > b_cmp.Count, b_cmp.Count, a_cmp.Count)
@@ -2722,6 +2530,8 @@ Sub GlobalResets()
         
     Set a = New Collection
     Set b = New Collection
+    Set a_cmp = New Collection
+    Set b_cmp = New Collection
     
     lv1.ListItems.Clear
     lv2.ListItems.Clear
