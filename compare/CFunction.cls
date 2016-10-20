@@ -39,7 +39,7 @@ Public index As Long
 Public Jumps As Long
 Public Pushs As Long
 Public mCRC As String
-Public li As ListItem
+'Public li As ListItem
 Public esp As Long
 Public MatchMethod As String
 Public fxCalls As New Collection   'of functions by name

@@ -26,7 +26,7 @@ Attribute VB_Exposed = False
 '            Author: david@idefense.com
 
 
-Private Declare Function CallAsm Lib "User32" Alias "CallWindowProcA" (ByRef lpBytes As Any, ByVal hWnd As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function CallAsm Lib "user32" Alias "CallWindowProcA" (ByRef lpBytes As Any, ByVal hwnd As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 
 Dim crc_table(256) As Long
 Dim crc_table_computed As Boolean
@@ -36,7 +36,7 @@ Private shrx_b() As Byte
 
 Private Sub make_crc_table()
     Dim c As Long, n As Long, k As Long
-    
+
     For n = 0 To 255
           c = n
           For k = 0 To 7
@@ -48,9 +48,9 @@ Private Sub make_crc_table()
            Next
           crc_table(n) = c
     Next
-    
+
     crc_table_computed = True
-    
+
 End Sub
 
 
@@ -61,15 +61,15 @@ Private Sub Class_Initialize()
     'C2 10 00       RETN 10h
     Const sr As String = "8B 45 0C D1 E8 C2 10 00"
     shr_b() = toBytes(sr)
-    
+
     '8B45 0C        MOV EAX,DWORD PTR SS:[EBP+12]
     'C1E8 02        SHR EAX,2
     'C2 10 00       RETN 10h
     Const sr2 As String = "8B 45 0C C1 E8 02 C2 10 00"
     shrx_b = toBytes(sr2)
-    
+
     make_crc_table
-    
+
 End Sub
 
 Function Shr(x As Long) As Long
@@ -84,7 +84,7 @@ End Function
 Function crc(buf As String) As String
 Attribute crc.VB_UserMemId = 0
     Dim c As Long, n As Long, x As Long
-        
+
     c = -1
     If Not crc_table_computed Then Class_Initialize
 
@@ -92,31 +92,25 @@ Attribute crc.VB_UserMemId = 0
         x = Asc(Mid(buf, n, 1))
         c = crc_table((c Xor x) And &HFF) Xor ShrX(c, 8)
     Next
-     
+
     crc = Hex(c Xor &HFFFFFFFF)
-    
+
 End Function
 
 Private Function toBytes(x As String) As Byte()
     Dim tmp() As String
     Dim fx() As Byte
     Dim i As Long
-    
+
     tmp = Split(x, " ")
     ReDim fx(UBound(tmp))
-    
+
     For i = 0 To UBound(tmp)
         fx(i) = CInt("&h" & tmp(i))
     Next
-    
+
     toBytes = fx()
 
 End Function
-
-
-
-
-
-
 
 
