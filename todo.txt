@@ -1,6 +1,11 @@
 
+exact crc results add percentage
+add string match now that we are exporting comments to the db
+? tree match ? where one known matched functions call tree is examined for similar structure..
+
 way to save results so you dont have to recompare everything (big files can take a while)
 
+if break match or delete, update count and stats
 
 rtfHighlightDecompile: highlight string literals? (error prone if embedded quotes..)
 
