@@ -29,49 +29,6 @@ Global HighLightRunning As Boolean
 
 Const LANG_US = 1049
 
-'Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (pDest As Any, pSource As Any, ByVal ByteLen As Long)
-'
-'Public Function Clone(c As Collection) As Collection
-'
-'    Dim cc As New Collection
-'    Dim i As Long
-'
-'    For i = 1 To c.Count
-'        'If IsObject(c(i)) Then Err.Raise 256, , "CollectionEx.Clone: Can not clone a collection with object references"
-'        cc.Add c(i), keyForIndex(c, i)
-'    Next
-'
-'    Set Clone = cc
-'End Function
-'
-'Public Function keyForIndex(c As Collection, index As Long) As String
-'    ' Get a key based on its index value.  Must be in range, or error.
-'    Dim i     As Long
-'    Dim Ptr   As Long
-'    Dim sKey  As String
-'    '
-'    If index < 1 Or index > c.Count Then
-'        Err.Raise 9
-'        Exit Function
-'    End If
-'    '
-'    If index <= c.Count / 2 Then                                ' Start from front.
-'        CopyMemory Ptr, ByVal ObjPtr(c) + &H18, 4               ' First item pointer of collection header.
-'        For i = 2 To index
-'            CopyMemory Ptr, ByVal Ptr + &H18, 4                 ' Next item pointer of collection item.
-'        Next i
-'    Else                                                        ' Start from end and go back.
-'        CopyMemory Ptr, ByVal ObjPtr(c) + &H1C, 4               ' Last item pointer of collection header.
-'        For i = c.Count - 1 To index Step -1
-'            CopyMemory Ptr, ByVal Ptr + &H14, 4                 ' Previous item pointer of collection item.
-'        Next i
-'    End If
-'    '
-'    i = StrPtr(sKey)                                            ' Save string pointer because we're going to borrow the string.
-'    CopyMemory ByVal VarPtr(sKey), ByVal Ptr + &H10, 4          ' Key string of collection item.
-'    keyForIndex = sKey                                          ' Move key into property's return.
-'    CopyMemory ByVal VarPtr(sKey), i, 4                         ' Put string pointer back to keep memory straight.
-'End Function
 
 
 Sub rtfHighlightDecompile(c_src As String, tb As RichTextBox)
@@ -346,12 +303,12 @@ hell:
     RandomNum = tmp
 End Function
 
-Function isWithin(cnt As Integer, v1, v2, Optional min As Integer = 0) As Boolean
+Function isWithin(cnt As Integer, v1, v2, Optional Min As Integer = 0) As Boolean
     
     Dim low As Long
     Dim high As Long
     
-    If v1 <= min Or v2 <= min Then Exit Function
+    If v1 <= Min Or v2 <= Min Then Exit Function
     
     If v1 = v2 Then
         isWithin = True
@@ -458,6 +415,17 @@ Function writeFile(path, it) As Boolean 'this one should be binary safe...
 hell: writeFile = False
 End Function
 
+Function lowest(ParamArray values()) As Long
+   Dim Item
+   On Error Resume Next
+   lowest = &H7FFFFFFF
+   For Each Item In values
+      lowest = IIf(lowest > Item, Item, lowest)
+   Next
+   If lowest = &H7FFFFFFF Then lowest = -1
+End Function
+
+
 '
 'Sub ExactCrcMatch()
 '
@@ -517,4 +485,50 @@ End Function
 '    Next
 '
 'End Sub
+
+
+'Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (pDest As Any, pSource As Any, ByVal ByteLen As Long)
+'
+'Public Function Clone(c As Collection) As Collection
+'
+'    Dim cc As New Collection
+'    Dim i As Long
+'
+'    For i = 1 To c.Count
+'        'If IsObject(c(i)) Then Err.Raise 256, , "CollectionEx.Clone: Can not clone a collection with object references"
+'        cc.Add c(i), keyForIndex(c, i)
+'    Next
+'
+'    Set Clone = cc
+'End Function
+'
+'Public Function keyForIndex(c As Collection, index As Long) As String
+'    ' Get a key based on its index value.  Must be in range, or error.
+'    Dim i     As Long
+'    Dim Ptr   As Long
+'    Dim sKey  As String
+'    '
+'    If index < 1 Or index > c.Count Then
+'        Err.Raise 9
+'        Exit Function
+'    End If
+'    '
+'    If index <= c.Count / 2 Then                                ' Start from front.
+'        CopyMemory Ptr, ByVal ObjPtr(c) + &H18, 4               ' First item pointer of collection header.
+'        For i = 2 To index
+'            CopyMemory Ptr, ByVal Ptr + &H18, 4                 ' Next item pointer of collection item.
+'        Next i
+'    Else                                                        ' Start from end and go back.
+'        CopyMemory Ptr, ByVal ObjPtr(c) + &H1C, 4               ' Last item pointer of collection header.
+'        For i = c.Count - 1 To index Step -1
+'            CopyMemory Ptr, ByVal Ptr + &H14, 4                 ' Previous item pointer of collection item.
+'        Next i
+'    End If
+'    '
+'    i = StrPtr(sKey)                                            ' Save string pointer because we're going to borrow the string.
+'    CopyMemory ByVal VarPtr(sKey), ByVal Ptr + &H10, 4          ' Key string of collection item.
+'    keyForIndex = sKey                                          ' Move key into property's return.
+'    CopyMemory ByVal VarPtr(sKey), i, 4                         ' Put string pointer back to keep memory straight.
+'End Function
+
 

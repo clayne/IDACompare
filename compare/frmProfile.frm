@@ -169,6 +169,7 @@ Private Function BuildReport(x As CFunction) As String
         push r, "CRC: " & x.mCRC & vbCrLf
         push r, "Consts:" & l & DumpCollection(x.Constants) & vbCrLf
         push r, "Fx Calls:" & l & DumpCollection(x.fxCalls) & vbCrLf
+        push r, "Strings: " & l & x.DumpStrings() & vbCrLf
     End With
         
     BuildReport = Join(r, vbCrLf)

@@ -34,20 +34,38 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   3675
+      Height          =   4305
       Left            =   1860
-      ScaleHeight     =   3615
+      ScaleHeight     =   4245
       ScaleWidth      =   6735
       TabIndex        =   12
       Top             =   720
       Width           =   6795
       Begin VB.Frame frmConfigMatchesInner 
          Caption         =   " Configure Match Engine "
-         Height          =   3465
-         Left            =   60
+         Height          =   4095
+         Left            =   45
          TabIndex        =   13
          Top             =   60
          Width           =   6585
+         Begin VB.CheckBox chkStringMatch 
+            Caption         =   "String Match"
+            BeginProperty Font 
+               Name            =   "MS Sans Serif"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   400
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            Height          =   285
+            Left            =   270
+            TabIndex        =   35
+            Top             =   1080
+            Value           =   1  'Checked
+            Width           =   1365
+         End
          Begin VB.CheckBox chkEnforceMinSize 
             Caption         =   "Ignore functions < 30 Bytes"
             Height          =   285
@@ -112,9 +130,9 @@ Begin VB.Form Form1
                Strikethrough   =   0   'False
             EndProperty
             Height          =   315
-            Left            =   270
+            Left            =   225
             TabIndex        =   27
-            Top             =   2880
+            Top             =   3645
             Value           =   1  'Checked
             Width           =   3495
          End
@@ -132,7 +150,7 @@ Begin VB.Form Form1
             Height          =   315
             Left            =   270
             TabIndex        =   20
-            Top             =   2490
+            Top             =   2895
             Value           =   1  'Checked
             Width           =   2295
          End
@@ -150,7 +168,7 @@ Begin VB.Form Form1
             Height          =   315
             Left            =   270
             TabIndex        =   19
-            Top             =   2130
+            Top             =   2535
             Value           =   1  'Checked
             Width           =   2295
          End
@@ -186,7 +204,7 @@ Begin VB.Form Form1
             Height          =   315
             Left            =   270
             TabIndex        =   17
-            Top             =   1770
+            Top             =   2175
             Value           =   1  'Checked
             Width           =   2295
          End
@@ -204,7 +222,7 @@ Begin VB.Form Form1
             Height          =   315
             Left            =   270
             TabIndex        =   16
-            Top             =   1410
+            Top             =   1815
             Value           =   1  'Checked
             Width           =   2295
          End
@@ -222,7 +240,7 @@ Begin VB.Form Form1
             Height          =   315
             Left            =   270
             TabIndex        =   15
-            Top             =   1050
+            Top             =   1440
             Value           =   1  'Checked
             Width           =   2295
          End
@@ -463,7 +481,7 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      NumItems        =   4
+      NumItems        =   6
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "i"
          Object.Width           =   882
@@ -475,11 +493,21 @@ Begin VB.Form Form1
       EndProperty
       BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   2
-         Text            =   "name"
-         Object.Width           =   3528
+         Text            =   "call"
+         Object.Width           =   1235
       EndProperty
       BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   3
+         Text            =   "str"
+         Object.Width           =   1235
+      EndProperty
+      BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   4
+         Text            =   "name"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(6) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   5
          Text            =   "crc"
          Object.Width           =   2540
       EndProperty
@@ -513,7 +541,7 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      NumItems        =   4
+      NumItems        =   6
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "i"
          Object.Width           =   882
@@ -525,11 +553,21 @@ Begin VB.Form Form1
       EndProperty
       BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   2
-         Text            =   "name"
-         Object.Width           =   3528
+         Text            =   "call"
+         Object.Width           =   1235
       EndProperty
       BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   3
+         Text            =   "str"
+         Object.Width           =   1235
+      EndProperty
+      BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   4
+         Text            =   "name"
+         Object.Width           =   3528
+      EndProperty
+      BeginProperty ColumnHeader(6) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   5
          Text            =   "crc"
          Object.Width           =   2540
       EndProperty
@@ -543,7 +581,6 @@ Begin VB.Form Form1
       _ExtentX        =   8652
       _ExtentY        =   2725
       _Version        =   393217
-      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1D82
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -565,7 +602,6 @@ Begin VB.Form Form1
       _ExtentX        =   8599
       _ExtentY        =   2725
       _Version        =   393217
-      Enabled         =   -1  'True
       ScrollBars      =   2
       TextRTF         =   $"Form1.frx":1DFE
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -1518,10 +1554,10 @@ Private Sub Form_Resize()
         DoMove
     End If
     
-    With lv1.ColumnHeaders(4)
+    With lv1.ColumnHeaders(6)
         .Width = lv1.Width - .left - 100
     End With
-    With lv2.ColumnHeaders(4)
+    With lv2.ColumnHeaders(6)
         .Width = lv2.Width - .left - 100
     End With
     With lvExact.ColumnHeaders(5)
@@ -1791,7 +1827,7 @@ Sub LoadCollections(mode As CompareModes, Optional minLen As Long = 30, Optional
     
     pb.Max = ado("Select count(autoid) as cnt from " & tbl & " where leng > " & minLen & clause)!cnt
     pb.value = 0
-    Label1.caption = "Loading Table " & tbl
+    Label1.caption = "Analyzing data from " & tbl
     Label1.Refresh
     
     i = 0
@@ -1844,8 +1880,10 @@ Function DisplayUnmatched(lv As ListView, cc As Collection)
         li.Tag = c.autoid
         li.Text = pad(c.index, 3)
         li.SubItems(1) = pad(c.Length)
-        li.SubItems(2) = c.Name
-        li.SubItems(3) = c.mCRC
+        li.SubItems(2) = pad(c.Calls)
+        li.SubItems(3) = pad(c.strings.Count)
+        li.SubItems(4) = c.Name
+        li.SubItems(5) = c.mCRC
         If i Mod 50 = 0 Then pb.value = i
         i = i + 1
     Next
@@ -1889,7 +1927,7 @@ Function ExactCrcMatch() As Long
             b_cmp.Remove key
             ret = ret + 1
         End If
-        If i Mod 50 = 0 Then pb.value = i
+        If i Mod 50 = 0 Then pb.value = a_cmp.Count - i
     Next
 
     ExactCrcMatch = ret
@@ -1923,7 +1961,7 @@ Function NameMatch() As Long
             'End If
         Next
         If i Mod 50 = 0 Then
-            pb.value = i
+            pb.value = a_cmp.Count - i
             DoEvents
         End If
     Next
@@ -1958,7 +1996,7 @@ Function CallPushMatch() As Long
             'End If
         Next
         If i Mod 50 = 0 Then
-            pb.value = i
+            pb.value = a_cmp.Count - i
             DoEvents
         End If
     Next
@@ -1991,7 +2029,7 @@ Function EspMatch() As Long
                 'End If
             Next
             If i Mod 50 = 0 Then
-                pb.value = i
+                pb.value = a_cmp.Count - i
                 DoEvents
             End If
       Next
@@ -1999,6 +2037,78 @@ Function EspMatch() As Long
       pb.value = 0
       EspMatch = ret
       
+End Function
+
+Function StringMatch() As Long
+    Dim i, j, t
+    
+    Dim ret As Long, ii As Long, jj As Long
+    Dim aCnt As Long, bCnt As Long, hits As Long, isMatch As Boolean
+    Dim minMatches As Long
+    
+    pb.value = 0
+    Label1 = "String Matching"
+    
+    For ii = a_cmp.Count To 1 Step -1
+        Set c = a_cmp(ii)
+        aCnt = c.strings.Count
+        If aCnt > 0 Then
+            For jj = b_cmp.Count To 1 Step -1
+                Set h = b_cmp(jj)
+                bCnt = h.strings.Count
+                If bCnt > 0 Then
+                    'If InStr(c.Name, "4D0") > 0 And InStr(h.Name, "180") > 0 Then Stop
+                    
+                    If isWithin(10, aCnt, bCnt) Then
+                                        
+                        minMatches = lowest(aCnt, bCnt)
+                        If minMatches < 3 Then
+                           'we must match them all
+                        Else
+                            minMatches = (minMatches / 4) * 3 'otherwise 75% is ok
+                        End If
+                         
+                        'so the length of the string gives it a higher weight of uniqueness..we should factor this in
+                        'and not just be based on string counts somehow..
+                        'for each s in c.strings: if len(s) > 10 then unique++; if unique > 3 then try to match these first..
+                        'of if len(s) > 10 and its found then unique++ if unique > 2 then isMatch=true
+                        
+                        hits = 0
+                        isMatch = False
+                        For Each t In c.strings
+                            If h.StringExists(t) Then
+                                hits = hits + 1
+                                If hits = minMatches Then
+                                    isMatch = True
+                                    Exit For
+                                End If
+                            End If
+                        Next
+                        
+                        'If h.DumpStrings = c.DumpStrings And Not isMatch Then Stop
+                         
+                        If isMatch Then
+                            AddToMatchCollection c, h, "String Match"
+                            a_cmp.Remove ii
+                            b_cmp.Remove jj
+                            ret = ret + 1
+                            Exit For
+                        End If
+                        
+                    End If
+                End If
+                If jj Mod 20 = 0 Then DoEvents
+            Next
+        End If
+        If ii Mod 50 = 0 Then
+            pb.value = a_cmp.Count - ii
+            DoEvents
+        End If
+    Next
+
+    pb.value = 0
+    StringMatch = ret
+    
 End Function
 
 
@@ -2035,10 +2145,10 @@ Function APIMatch() As Long
                     'End If
                 End If
             'End If
-            DoEvents
+            If jj Mod 20 = 0 Then DoEvents
         Next
         If ii Mod 50 = 0 Then
-            pb.value = ii
+            pb.value = a_cmp.Count - ii
             DoEvents
         End If
     Next
@@ -2078,10 +2188,10 @@ Function APIMatch2() As Long
                         End If
                 End If
             'End If
-            DoEvents
+            If jj Mod 20 = 0 Then DoEvents
         Next
         If ii Mod 50 = 0 Then
-            pb.value = ii
+            pb.value = a_cmp.Count - ii
             DoEvents
         End If
     Next
@@ -2122,7 +2232,7 @@ Function ConstMatch() As Long
                 'End If
             Next
             If ii Mod 50 = 0 Then
-                pb.value = ii
+                pb.value = a_cmp.Count - ii
                 DoEvents
             End If
       Next
@@ -2278,6 +2388,11 @@ Sub LoadDataBase(pth As String)
     If chkNameMatch.value = 1 Then
         matches = NameMatch()
         push stats(), "Name Matches: " & matches
+    End If
+    
+    If chkStringMatch.value = 1 Then
+        matches = StringMatch()
+        push stats(), "String Matches: " & matches
     End If
     
     If chkApiMatch.value = 1 Then

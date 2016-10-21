@@ -1,6 +1,10 @@
 
 exact crc results add percentage
-add string match now that we are exporting comments to the db
+
+string match: so the length of the string gives it a higher weight of uniqueness..we should factor this in
+              and not just be based on string counts somehow..
+ 
+
 ? tree match ? where one known matched functions call tree is examined for similar structure..
 
 way to save results so you dont have to recompare everything (big files can take a while)

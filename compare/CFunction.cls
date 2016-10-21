@@ -45,8 +45,8 @@ Public fxCalls As New Collection   'of functions by name
 Public Constants As New Collection
 Public labels As New Collection
 Public Standardized As String
+Public strings As New Collection
 
-'todo: extract strings
 
 Function StandardizeAsm(ByVal asm As String) As String
     
@@ -57,6 +57,8 @@ Function StandardizeAsm(ByVal asm As String) As String
     Dim i As Long
     Dim k
     Dim t As String
+    Dim a As Long
+    Dim str As String
     
     tmp = Split(asm, vbCrLf)
     
@@ -87,6 +89,13 @@ Function StandardizeAsm(ByVal asm As String) As String
             ElseIf right(Trim(tmp(j)), 1) = ":" Then
                 labels.Add Mid(Trim(tmp(j)), 1, Len(Trim(tmp(j))) - 1)
             End If
+            
+            a = InStr(tmp(j), ";")
+            If a > 0 And a < Len(tmp(j)) Then
+                str = Trim(Mid(tmp(j), a + 1))
+                AddUniqueString Replace(str, """", Empty)
+            End If
+                
     Next
         
     Standardize tmp
@@ -97,8 +106,43 @@ Function StandardizeAsm(ByVal asm As String) As String
     mCRC = crc(Standardized)
     StandardizeAsm = mCRC
     
+    'If strings.Count > 0 Then Debug.Print Name & " added " & strings.Count & " strings"
+    
     'should we set standardized as empty now to free up memory? I dont think we use it again..
     
+End Function
+
+Function StringExists(s, Optional exact As Boolean = True)
+        On Error Resume Next
+        Dim v
+        If exact Then
+            v = strings(s)
+            StringExists = (Err.Number = 0)
+        Else
+            If Len(s) < 2 Then Exit Function 'to short for good results...
+            For Each v In strings
+                If InStr(1, v, s, vbTextCompare) > 0 Then
+                    If Abs(Len(v) - Len(s)) < 5 Then StringExists = True
+                End If
+            Next
+        End If
+        'If StringExists Then Stop
+End Function
+
+Function DumpStrings()
+    Dim tmp() As String
+    Dim v
+    For Each v In strings
+        push tmp, v
+    Next
+    DumpStrings = Join(tmp, vbCrLf)
+End Function
+
+Private Function AddUniqueString(s As String)
+    On Error Resume Next
+    If Len(s) = 0 Then Exit Function
+    strings.Add s, s
+    'If Err.Number = 0 Then Debug.Print Name & ">" & s
 End Function
 
 Function ReHash(ByVal asm)
