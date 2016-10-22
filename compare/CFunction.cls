@@ -82,7 +82,11 @@ Function StandardizeAsm(ByVal asm As String) As String
             ElseIf CStr(tmp(j)) Like "sub*esp,*" Then
                 k = Trim(Mid(tmp(j), InStr(tmp(j), "esp,") + 4))
                 If InStr(k, "h") > 0 Then
-                    esp = CLng("&h" & Replace(k, "h", ""))
+                    'a = FirstOccurance(k, "+,-,*", str)
+                    'If a > 0 Then
+                    '    str = Mid(k, a + 1)
+                    'if its a mem offset we dont know what the real value is...ignore
+                    If InStr(k, "[") < 1 Then esp = CLng("&h" & Replace(k, "h", ""))
                 Else
                     If IsNumeric(k) Then esp = CLng(k)
                 End If

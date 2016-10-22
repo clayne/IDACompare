@@ -80,7 +80,7 @@ Sub rtfHighlightDecompile(c_src As String, tb As RichTextBox)
     For Each k In keywords
         a = 0
         Do
-            a = tb.Find(k, a, , rtfWholeWord)
+            a = tb.find(k, a, , rtfWholeWord)
             If a > -1 Then
                 eol = InStr(a, tb.Text, vbCrLf)
                 nextSpace = InStr(a + 1, tb.Text, " ")
@@ -191,7 +191,7 @@ Sub rtfHighlightAsm(asm As String, c As CFunction, tb As RichTextBox)
     For Each k In c.Constants
         a = 0
         Do
-            a = tb.Find(k, a)
+            a = tb.find(k, a)
             If a > 0 Then
                 eol = InStr(a, tb.Text, vbCrLf)
                 nextSpace = InStr(a + 1, tb.Text, " ")
@@ -425,6 +425,30 @@ Function lowest(ParamArray values()) As Long
    If lowest = &H7FFFFFFF Then lowest = -1
 End Function
 
+'Function FirstOccurance(it, ByVal csvFind As String, ByRef outFoundVal) As Long
+'    If Len(csvFind) = 0 Then Exit Function
+'
+'    Dim find() As String, x, lowestOffset As Long, lowestIndex As Long, i As Long, a As Long
+'
+'    outFoundVal = Empty
+'    lowestOffset = MAX_LONG
+'    find = Split(csvFind, ",")
+'
+'    For i = 0 To UBound(find)
+'        If Len(find(i)) = 0 Then find(i) = ","
+'        a = InStr(1, it, find(i), vbTextCompare)
+'        If a > 0 And a < lowestOffset Then
+'            lowestOffset = a
+'            lowestIndex = i
+'        End If
+'    Next
+'
+'    If lowestOffset = MAX_LONG Then Exit Function
+'
+'    outFoundVal = find(lowestIndex)
+'    FirstOccurance = lowestOffset
+'
+'End Function
 
 '
 'Sub ExactCrcMatch()

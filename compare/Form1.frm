@@ -397,7 +397,7 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         NumItems        =   5
+         NumItems        =   8
          BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
             Text            =   "Name 1"
             Object.Width           =   3528
@@ -409,16 +409,31 @@ Begin VB.Form Form1
          EndProperty
          BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
             SubItemIndex    =   2
-            Text            =   "Len Match"
-            Object.Width           =   2540
+            Text            =   "Len"
+            Object.Width           =   1587
          EndProperty
          BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
             SubItemIndex    =   3
-            Text            =   "Stats"
-            Object.Width           =   2540
+            Text            =   "Calls"
+            Object.Width           =   1411
          EndProperty
          BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
             SubItemIndex    =   4
+            Text            =   "Const"
+            Object.Width           =   1411
+         EndProperty
+         BeginProperty ColumnHeader(6) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   5
+            Text            =   "Str"
+            Object.Width           =   1411
+         EndProperty
+         BeginProperty ColumnHeader(7) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   6
+            Text            =   "ESP"
+            Object.Width           =   1587
+         EndProperty
+         BeginProperty ColumnHeader(8) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   7
             Text            =   "Match Method"
             Object.Width           =   6174
          EndProperty
@@ -852,6 +867,15 @@ Option Explicit
 'wsh.RegWrite "HKCR\IDACompare.Document\DefaultIcon\", homedir & ",0"
 'End If
                 
+'top list views:
+'   li.Tag = h.autoid
+'   li.Text = pad(h.index, 3)
+'   li.SubItems(1) = pad(h.Length)
+'   li.SubItems(2) = pad(h.Calls)
+'   li.SubItems(3) = pad(h.strings.Count)
+'   li.SubItems(4) = h.Name
+'   li.SubItems(5) = h.mCRC
+   
 Private Declare Function GetTickCount Lib "kernel32" () As Long
 
 Public cmndlg1 As New clsCmnDlg
@@ -865,7 +889,11 @@ Dim m2 As New Collection 'of matched cfunction from ibd2
 Dim a As New Collection 'of cfunction, all funcs for idb 1
 Dim b As New Collection 'of cfunction, all funcs for idb 2
 
-'Public old_cmp As Boolean   '1120 functions 96% match was 8 seconds, now 5 - 38% faster, now 4 - 50%
+'Public old_cmp As Boolean
+    '1120 functions 96% match was 8 seconds, now 5 - 38% faster, now 4 - 50%
+    '4k functions 100% match went from 88 seconds to 18 - 75% faster
+
+
 Dim a_cmp As New Collection 'of cFunction, only the unmatched functions
 Dim b_cmp As New Collection 'of cFunction, only the unmatched functions
 
@@ -958,7 +986,7 @@ Private Declare Function ReleaseCapture Lib "user32" () As Long
         For i = tlv.ListItems.Count To 1 Step -1
             Set li = tlv.ListItems(i)
             If li.Selected Then
-                Set ff = b(li.ListSubItems(3))
+                Set ff = b(li.ListSubItems(5))
                 cn.Execute "Delete from b where autoid=" & ff.autoid
                 tlv.ListItems.Remove li.index
             End If
@@ -980,7 +1008,7 @@ Private Sub lv1_KeyDown(KeyCode As Integer, Shift As Integer)
         For i = tlv.ListItems.Count To 1 Step -1
             Set li = tlv.ListItems(i)
             If li.Selected Then
-                Set ff = a(li.ListSubItems(3))
+                Set ff = a(li.ListSubItems(5))
                 cn.Execute "Delete from a where autoid=" & ff.autoid
                 tlv.ListItems.Remove li.index
             End If
@@ -1023,7 +1051,7 @@ Private Sub mnuDelete_Click(index As Integer)
         Set li = lvExact.ListItems(i)
         Select Case index
             Case 0: If li.Selected Then handleIt = True
-            Case 1: If li.SubItems(4) = "Exact CRC" Then handleIt = True
+            Case 1: If li.SubItems(7) = "Exact CRC" Then handleIt = True
         End Select
         
         If handleIt Then
@@ -1097,7 +1125,7 @@ Private Sub mnuExport_Click()
     
     cf.WriteLine lblMatched & vbCrLf
     For Each li In lvExact.ListItems
-        cf.WriteLine pad(li.Text, 40, False) & vbTab & pad(li.SubItems(1), 40, False) & vbTab & li.SubItems(4)
+        cf.WriteLine pad(li.Text, 40, False) & vbTab & pad(li.SubItems(1), 40, False) & vbTab & li.SubItems(7)
     Next
     
     cf.fClose
@@ -1150,7 +1178,7 @@ Private Sub mnuRemove_Click(index As Integer)
         Set li = lvExact.ListItems(i)
         Select Case index
             Case 0: If li.Selected Then lvExact.ListItems.Remove li.index
-            Case 1: If li.SubItems(4) = "Exact CRC" Then lvExact.ListItems.Remove li.index
+            Case 1: If li.SubItems(7) = "Exact CRC" Then lvExact.ListItems.Remove li.index
         End Select
     Next
     
@@ -1275,17 +1303,21 @@ Private Sub cmdBreakMatch_Click()
    
    Set li = lv1.ListItems.Add(, "id:" & c.autoid)
    li.Tag = c.autoid
-   li.Text = c.index
-   li.SubItems(1) = c.Length
-   li.SubItems(2) = c.Name
-   li.SubItems(3) = c.mCRC
-   
+   li.Text = pad(c.index, 3)
+   li.SubItems(1) = pad(c.Length)
+   li.SubItems(2) = pad(c.Calls)
+   li.SubItems(3) = pad(c.strings.Count)
+   li.SubItems(4) = c.Name
+   li.SubItems(5) = c.mCRC
+        
    Set li = lv2.ListItems.Add(, "id:" & h.autoid)
    li.Tag = h.autoid
-   li.Text = h.index
-   li.SubItems(1) = h.Length
-   li.SubItems(2) = h.Name
-   li.SubItems(3) = h.mCRC
+   li.Text = pad(h.index, 3)
+   li.SubItems(1) = pad(h.Length)
+   li.SubItems(2) = pad(h.Calls)
+   li.SubItems(3) = pad(h.strings.Count)
+   li.SubItems(4) = h.Name
+   li.SubItems(5) = h.mCRC
    
    lvExact.ListItems.Remove sel_exact.index
    Set sel_exact = Nothing
@@ -1405,12 +1437,12 @@ Private Sub mnuProfileSelected_Click()
     If sel_1 Is Nothing And sel_2 Is Nothing Then Exit Sub
     
     If Not sel_1 Is Nothing And Not sel_2 Is Nothing Then
-        Set c = a(sel_1.ListSubItems(3))
-        Set h = b(sel_2.ListSubItems(3))
+        Set c = a(sel_1.ListSubItems(5))
+        Set h = b(sel_2.ListSubItems(5))
     ElseIf Not sel_1 Is Nothing Then
-        Set c = a(sel_1.ListSubItems(3))
+        Set c = a(sel_1.ListSubItems(5))
     ElseIf Not sel_2 Is Nothing Then
-        Set c = b(sel_2.ListSubItems(3))
+        Set c = b(sel_2.ListSubItems(5))
     End If
     
     Set f = New frmProfile
@@ -1560,7 +1592,7 @@ Private Sub Form_Resize()
     With lv2.ColumnHeaders(6)
         .Width = lv2.Width - .left - 100
     End With
-    With lvExact.ColumnHeaders(5)
+    With lvExact.ColumnHeaders(lvExact.ColumnHeaders.Count)
         .Width = lvExact.Width - .left - 100
     End With
     
@@ -1590,7 +1622,7 @@ Private Sub lv1_DblClick()
     Dim f As frmProfile
     If sel_1 Is Nothing Then Exit Sub
     Set f = New frmProfile
-    Set c = a(sel_1.ListSubItems(3))
+    Set c = a(sel_1.ListSubItems(5))
     f.ShowProfile c
 End Sub
 
@@ -1599,7 +1631,7 @@ Private Sub lv2_DblClick()
     Dim f As frmProfile
     If sel_2 Is Nothing Then Exit Sub
     Set f = New frmProfile
-    Set c = b(sel_2.ListSubItems(3))
+    Set c = b(sel_2.ListSubItems(5))
     f.ShowProfile c
 End Sub
 
@@ -1639,8 +1671,8 @@ Private Sub cmdManualMatch_Click()
         Exit Sub
     End If
     
-    Set c = a(sel_1.ListSubItems(3))
-    Set h = b(sel_2.ListSubItems(3))
+    Set c = a(sel_1.ListSubItems(5))
+    Set h = b(sel_2.ListSubItems(5))
        
     c.matched = True
     h.matched = True
@@ -1658,7 +1690,7 @@ Private Sub cmdManualMatch_Click()
     
     li.Text = c.Name
     li.SubItems(1) = h.Name
-    li.SubItems(4) = c.MatchMethod
+    li.SubItems(7) = c.MatchMethod
     
     t = c.Length
     u = h.Length
@@ -1669,8 +1701,11 @@ Private Sub cmdManualMatch_Click()
         li.SubItems(2) = t & "," & u
     End If
     
-    li.SubItems(3) = c.Calls & "/" & h.Calls & " " & Hex(c.esp) & "/" & Hex(h.esp)
-    
+    li.SubItems(3) = c.Calls & "/" & h.Calls
+    li.SubItems(4) = c.Constants.Count & "/" & h.Constants.Count
+    li.SubItems(5) = c.strings.Count & "/" & h.strings.Count
+    li.SubItems(6) = Hex(c.esp) & "/" & Hex(h.esp)
+            
     Set sel_1 = Nothing
     Set sel_2 = Nothing
     cmdManualMatch.Enabled = False
@@ -1915,10 +1950,12 @@ Function ExactCrcMatch() As Long
     Dim key As String
     Dim i As Long, j As Long
     
+    On Error GoTo hell
+    
     Label1 = "CRC Matching"
 
     For i = a_cmp.Count To 1 Step -1
-        key = a_cmp(i).mCRC 'keyForIndex(a_cmp, i)
+        key = a_cmp(i).mCRC
         If KeyExistsInCollection(b_cmp, key) Then
             Set c = a_cmp(key)
             Set h = b_cmp(key)
@@ -1927,18 +1964,31 @@ Function ExactCrcMatch() As Long
             b_cmp.Remove key
             ret = ret + 1
         End If
-        If i Mod 50 = 0 Then pb.value = a_cmp.Count - i
+        If i Mod 50 = 0 Then
+            setPb a_cmp.Count - i
+            DoEvents
+        End If
     Next
 
     ExactCrcMatch = ret
     
+    Exit Function
+hell:
+    Debug.Print Erl & " : " & Err.Description
 End Function
+
+Private Sub setPb(v As Long)
+    On Error Resume Next
+    If v < pb.Min Or v > pb.Max Then Exit Sub
+    pb.value = v
+End Sub
 
 Function NameMatch() As Long
 
     Dim ret As Long
     Dim i As Long, j As Long
-
+    Dim ff As String
+    
     pb.value = 0
     Label1 = "Public Name Matching"
     
@@ -1946,22 +1996,24 @@ Function NameMatch() As Long
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
             Set h = b_cmp(j)
-            'If Not c.matched And Not h.matched Then
-                 If c.Name = h.Name _
-                    And VBA.left(c.Name, 4) <> "sub_" _
-                    And VBA.left(c.Name, 4) <> "unkn" _
-                    And c.Name <> "start" _
-                 Then
-                    AddToMatchCollection c, h, "Name Match"
-                    a_cmp.Remove i
-                    b_cmp.Remove j
-                    ret = ret + 1
-                    Exit For
-                 End If
-            'End If
+            
+            ff = VBA.left(c.Name, 4)
+            If ff = "sub_" Then GoTo nextOne
+            If ff = "unkn" Then GoTo nextOne
+            If c.Name = "start" Then GoTo nextOne
+            
+            If c.Name = h.Name Then
+               AddToMatchCollection c, h, "Name Match"
+               a_cmp.Remove i
+               b_cmp.Remove j
+               ret = ret + 1
+               Exit For
+            End If
+nextOne:
+            If j Mod 50 = 0 Then DoEvents
         Next
         If i Mod 50 = 0 Then
-            pb.value = a_cmp.Count - i
+            setPb a_cmp.Count - i
             DoEvents
         End If
     Next
@@ -1981,22 +2033,24 @@ Function CallPushMatch() As Long
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
             Set h = b_cmp(j)
-            'If Not c.matched And Not h.matched Then
-                If c.Calls = h.Calls And c.Pushs = h.Pushs Then  'same num of calls and pushs
-                    If isWithin(60, c.Length, h.Length, 80) Then     'and length is close
-                        If isWithin(4, c.Jumps, h.Jumps) Then    'and num jmps is close
-                            AddToMatchCollection c, h, "Call/Push Match"
-                            a_cmp.Remove i
-                            b_cmp.Remove j
-                            ret = ret + 1
-                            Exit For
-                        End If
+            
+            'todo: these should be a percentage based on function length probably
+            If c.Calls = h.Calls And c.Pushs = h.Pushs Then  'same num of calls and pushs
+                If isWithin(60, c.Length, h.Length, 80) Then     'and length is close
+                    If isWithin(4, c.Jumps, h.Jumps) Then    'and num jmps is close
+                        AddToMatchCollection c, h, "Call/Push Match"
+                        a_cmp.Remove i
+                        b_cmp.Remove j
+                        ret = ret + 1
+                        Exit For
                     End If
-                 End If
-            'End If
+                End If
+             End If
+             
+            If j Mod 20 = 0 Then DoEvents
         Next
         If i Mod 50 = 0 Then
-            pb.value = a_cmp.Count - i
+            setPb a_cmp.Count - i
             DoEvents
         End If
     Next
@@ -2015,23 +2069,25 @@ Function EspMatch() As Long
     For i = a_cmp.Count To 1 Step -1
         Set c = a_cmp(i)
         For j = b_cmp.Count To 1 Step -1
-                Set h = b_cmp(j)
-                'If Not c.matched And Not h.matched Then
-                     If isWithin(80, c.Length, h.Length, 80) Then
-                        If c.esp <> 0 And c.esp = h.esp And isWithin(40, c.Length, h.Length) Then
-                            AddToMatchCollection c, h, "ESP Match"
-                            a_cmp.Remove i
-                            b_cmp.Remove j
-                            ret = ret + 1
-                            Exit For
-                        End If
-                     End If
-                'End If
-            Next
-            If i Mod 50 = 0 Then
-                pb.value = a_cmp.Count - i
-                DoEvents
+            Set h = b_cmp(j)
+            
+            'todo: these should be a percentage based on function length probably
+            If isWithin(80, c.Length, h.Length, 80) Then
+               If c.esp <> 0 And c.esp = h.esp And isWithin(40, c.Length, h.Length) Then
+                   AddToMatchCollection c, h, "ESP Match"
+                   a_cmp.Remove i
+                   b_cmp.Remove j
+                   ret = ret + 1
+                   Exit For
+               End If
             End If
+            
+            If j Mod 20 = 0 Then DoEvents
+        Next
+        If i Mod 50 = 0 Then
+            setPb a_cmp.Count - i
+            DoEvents
+        End If
       Next
 
       pb.value = 0
@@ -2101,7 +2157,7 @@ Function StringMatch() As Long
             Next
         End If
         If ii Mod 50 = 0 Then
-            pb.value = a_cmp.Count - ii
+            setPb a_cmp.Count - ii
             DoEvents
         End If
     Next
@@ -2123,32 +2179,32 @@ Function APIMatch() As Long
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
             Set h = b_cmp(jj)
+            
             'not matched, same num of apicalls, within 15 bytes sizewise, and api called in same order
-            'If Not c.matched And Not h.matched Then
-                If h.fxCalls.Count = c.fxCalls.Count And h.fxCalls.Count > 0 Then
-                    'If isWithin(15, c.Length, h.Length) Then
-                        j = 0
-                        i = 0
-                        For Each t In h.fxCalls
-                            i = i + 1
-                            If t = c.fxCalls(i) Then
-                                j = j + 1
-                            End If
-                        Next
-                        If j = h.fxCalls.Count Then
-                            AddToMatchCollection c, h, "API Profile Match"
-                            a_cmp.Remove ii
-                            b_cmp.Remove jj
-                            ret = ret + 1
-                            Exit For
+            If h.fxCalls.Count = c.fxCalls.Count And h.fxCalls.Count > 0 Then
+                'If isWithin(15, c.Length, h.Length) Then
+                    j = 0
+                    i = 0
+                    For Each t In h.fxCalls
+                        i = i + 1
+                        If t = c.fxCalls(i) Then
+                            j = j + 1
                         End If
-                    'End If
-                End If
-            'End If
+                    Next
+                    If j = h.fxCalls.Count Then
+                        AddToMatchCollection c, h, "API Profile Match"
+                        a_cmp.Remove ii
+                        b_cmp.Remove jj
+                        ret = ret + 1
+                        Exit For
+                    End If
+                'End If
+            End If
+
             If jj Mod 20 = 0 Then DoEvents
         Next
         If ii Mod 50 = 0 Then
-            pb.value = a_cmp.Count - ii
+            setPb a_cmp.Count - ii
             DoEvents
         End If
     Next
@@ -2170,28 +2226,28 @@ Function APIMatch2() As Long
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
             Set h = b_cmp(jj)
-            'If Not c.matched And Not h.matched Then
-                If isWithin(4, h.fxCalls.Count, c.fxCalls.Count, 4) And _
-                     isWithin(100, c.Length, h.Length) Then
-                        j = 0
-                        For Each t In h.fxCalls
-                            For Each i In c.fxCalls
-                                If t = i Then j = j + 1
-                            Next
+                
+            If isWithin(4, h.fxCalls.Count, c.fxCalls.Count, 4) And _
+                 isWithin(100, c.Length, h.Length) Then
+                    j = 0
+                    For Each t In h.fxCalls
+                        For Each i In c.fxCalls
+                            If t = i Then j = j + 1
                         Next
-                        If isWithin(4, j, h.fxCalls.Count, 3) Then
-                            AddToMatchCollection c, h, "API Profile Match 2"
-                            a_cmp.Remove ii
-                            b_cmp.Remove jj
-                            ret = ret + 1
-                            Exit For
-                        End If
-                End If
-            'End If
+                    Next
+                    If isWithin(4, j, h.fxCalls.Count, 3) Then
+                        AddToMatchCollection c, h, "API Profile Match 2"
+                        a_cmp.Remove ii
+                        b_cmp.Remove jj
+                        ret = ret + 1
+                        Exit For
+                    End If
+            End If
+            
             If jj Mod 20 = 0 Then DoEvents
         Next
         If ii Mod 50 = 0 Then
-            pb.value = a_cmp.Count - ii
+            setPb a_cmp.Count - ii
             DoEvents
         End If
     Next
@@ -2212,27 +2268,27 @@ Function ConstMatch() As Long
         Set c = a_cmp(ii)
         For jj = b_cmp.Count To 1 Step -1
                 Set h = b_cmp(jj)
-                'If Not c.matched And Not h.matched Then
-                     If isWithin(3, c.Constants.Count, h.Constants.Count, 1) And _
-                          isWithin(60, c.Length, h.Length) Then
-                                j = 0
-                                For Each x In c.Constants
-                                   If h.ConstantExists(x) Then j = j + 1
-                                Next
-                                
-                                If isWithin(3, c.Constants.Count, j, 2) Then
-                                    AddToMatchCollection c, h, "Const Match"
-                                    a_cmp.Remove ii
-                                    b_cmp.Remove jj
-                                    ret = ret + 1
-                                    Exit For
-                                End If
-                                
-                     End If
-                'End If
+               
+                If isWithin(3, c.Constants.Count, h.Constants.Count, 1) And _
+                     isWithin(60, c.Length, h.Length) Then
+                           j = 0
+                           For Each x In c.Constants
+                              If h.ConstantExists(x) Then j = j + 1
+                           Next
+                           
+                           If isWithin(3, c.Constants.Count, j, 2) Then
+                               AddToMatchCollection c, h, "Const Match"
+                               a_cmp.Remove ii
+                               b_cmp.Remove jj
+                               ret = ret + 1
+                               Exit For
+                           End If
+                           
+                End If
+                 
             Next
             If ii Mod 50 = 0 Then
-                pb.value = a_cmp.Count - ii
+                setPb a_cmp.Count - ii
                 DoEvents
             End If
       Next
@@ -2246,21 +2302,29 @@ Sub RunMatchSubs()
 
     Dim identifier
     Dim i As Long
+    Dim j As Long
+    Dim k As Long
     
     For i = 1 To 4
       pb.value = 0
       Label1 = "Running External Matchs"
       
       For Each c In a
+            j = j + 1
+            k = 0
             For Each h In b
+                k = k + 1
                 If Not c.matched And Not h.matched Then
                      If sc(1).Run("Match_" & i, c, h, identifier) = True Then
                          AddToMatchCollection c, h, CStr(identifier)
                      End If
                 End If
+                If k Mod 10 = 0 Then DoEvents
             Next
-            'If i Mod 10 = 0 Then pb.value = pb.value + 1
-            DoEvents
+            If j Mod 10 = 0 Then
+                setPb j
+                DoEvents
+            End If
       Next
       
       pb.value = 0
@@ -2283,16 +2347,15 @@ Sub AddMatchs()
     Dim j As Long
     Dim t, u
     Dim li As ListItem
-    
+   
     For Each c In m1
             j = j + 1
             Set li = lvExact.ListItems.Add
-            'li.Tag = c.li.Tag & "," & m2(j).li.Tag
             li.Tag = c.autoid & "," & m2(j).autoid
             
             li.Text = c.Name
             li.SubItems(1) = m2(j).Name
-            li.SubItems(4) = c.MatchMethod
+            li.SubItems(7) = c.MatchMethod
             
             t = c.Length
             u = m2(j).Length
@@ -2304,7 +2367,10 @@ Sub AddMatchs()
             End If
             
             If j Mod 50 = 0 Then pb.value = j - 1
-            li.SubItems(3) = c.Calls & "/" & m2(j).Calls & " " & Hex(c.esp) & "/" & Hex(m2(j).esp)
+            li.SubItems(3) = c.Calls & "/" & m2(j).Calls
+            li.SubItems(4) = c.Constants.Count & "/" & m2(j).Constants.Count
+            li.SubItems(5) = c.strings.Count & "/" & m2(j).strings.Count
+            li.SubItems(6) = Hex(c.esp) & "/" & Hex(m2(j).esp)
     Next
          
 End Sub
@@ -2512,7 +2578,7 @@ Public Sub lv1_ItemClick(ByVal Item As MSComctlLib.ListItem)
     asm = rs!disasm
     'txtA = asm
     
-    Set c = a(Item.ListSubItems(3))
+    Set c = a(Item.ListSubItems(5))
     rtfHighlightAsm asm, c, txtA
     
     Set sel_exact = Nothing
@@ -2545,7 +2611,7 @@ Public Sub lv2_ItemClick(ByVal Item As MSComctlLib.ListItem)
     asm = rs!disasm
     'txtB = asm
     
-    Set c = b(Item.ListSubItems(3))
+    Set c = b(Item.ListSubItems(5))
     rtfHighlightAsm asm, c, txtB
     
     Set sel_exact = Nothing
@@ -2598,7 +2664,7 @@ Private Sub lvExact_ItemClick(ByVal Item As MSComctlLib.ListItem)
    asmA = ado("Select disasm from a where autoid=" & x(0))!disasm
    asmB = ado("Select disasm from b where autoid=" & x(1))!disasm
    
-   'Set c = a(Item.ListSubItems(3))
+   'Set c = a(Item.ListSubItems(5))
    rtfHighlightAsm asmA, Nothing, txtA
    rtfHighlightAsm asmB, Nothing, txtB
     
