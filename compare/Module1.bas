@@ -80,7 +80,7 @@ Sub rtfHighlightDecompile(c_src As String, tb As RichTextBox)
     For Each k In keywords
         a = 0
         Do
-            a = tb.find(k, a, , rtfWholeWord)
+            a = tb.Find(k, a, , rtfWholeWord)
             If a > -1 Then
                 eol = InStr(a, tb.Text, vbCrLf)
                 nextSpace = InStr(a + 1, tb.Text, " ")
@@ -191,7 +191,7 @@ Sub rtfHighlightAsm(asm As String, c As CFunction, tb As RichTextBox)
     For Each k In c.Constants
         a = 0
         Do
-            a = tb.find(k, a)
+            a = tb.Find(k, a)
             If a > 0 Then
                 eol = InStr(a, tb.Text, vbCrLf)
                 nextSpace = InStr(a + 1, tb.Text, " ")
@@ -423,6 +423,44 @@ Function lowest(ParamArray values()) As Long
       lowest = IIf(lowest > Item, Item, lowest)
    Next
    If lowest = &H7FFFFFFF Then lowest = -1
+End Function
+
+Function GetCompileTime(Optional ByVal exe As String) As String
+    
+    Dim f As Long, i As Integer
+    Dim stamp As Long, e_lfanew As Long
+    Dim base As Date, compiled As Date
+
+    On Error GoTo errExit
+    
+    If Len(exe) = 0 Then
+        exe = App.path & "\" & App.EXEName & ".exe"
+    End If
+    
+    FileLen exe 'throw error if not exist
+    
+    f = FreeFile
+    Open exe For Binary Access Read As f
+    Get f, , i
+    
+    If i <> &H5A4D Then GoTo errExit 'MZ check
+     
+    Get f, 60 + 1, e_lfanew
+    Get f, e_lfanew + 1, i
+    
+    If i <> &H4550 Then GoTo errExit 'PE check
+    
+    Get f, e_lfanew + 9, stamp
+    Close f
+    
+    base = DateSerial(1970, 1, 1)
+    compiled = DateAdd("s", stamp, base)
+    GetCompileTime = Format(compiled, "ddd, mmm d yyyy, h:nn:ss ")
+    
+    Exit Function
+errExit:
+    Close f
+        
 End Function
 
 'Function FirstOccurance(it, ByVal csvFind As String, ByRef outFoundVal) As Long
