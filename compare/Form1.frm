@@ -877,7 +877,27 @@ Option Explicit
 '   li.SubItems(3) = pad(h.strings.Count)
 '   li.SubItems(4) = h.Name
 '   li.SubItems(5) = h.mCRC
-   
+
+Enum tlCols
+    tlIndex = 0
+    tlLength = 1
+    tlCalls = 2
+    tlStrCnt = 3
+    tlName = 4
+    tlCrc = 5
+End Enum
+
+Enum blCols
+    blName1 = 0
+    blName2 = 1
+    blLen = 2
+    blCalls = 3
+    blConst = 4
+    blStr = 5
+    blEsp = 6
+    blMatchMethod = 7
+End Enum
+
 Private Declare Function GetTickCount Lib "kernel32" () As Long
 
 Public cmndlg1 As New clsCmnDlg
@@ -1109,7 +1129,7 @@ Private Sub mnuExport_Click()
     
     cf.WriteLine lblDBA & vbCrLf
     For Each li In lv1.ListItems
-        cf.WriteLine li.SubItems(2)
+        cf.WriteLine li.SubItems(tlName)
     Next
     
     cf.WriteBlankLine
@@ -1118,7 +1138,7 @@ Private Sub mnuExport_Click()
     
     cf.WriteLine lblDBB & vbCrLf
     For Each li In lv2.ListItems
-        cf.WriteLine li.SubItems(2)
+        cf.WriteLine li.SubItems(tlName)
     Next
     
     cf.WriteBlankLine
@@ -1127,7 +1147,7 @@ Private Sub mnuExport_Click()
     
     cf.WriteLine lblMatched & vbCrLf
     For Each li In lvExact.ListItems
-        cf.WriteLine pad(li.Text, 40, False) & vbTab & pad(li.SubItems(1), 40, False) & vbTab & li.SubItems(7)
+        cf.WriteLine pad(li.Text, 40, False) & vbTab & pad(li.SubItems(1), 40, False) & vbTab & li.SubItems(blMatchMethod)
     Next
     
     cf.fClose
@@ -1159,9 +1179,9 @@ Private Sub mnuLVPrefixAll_Click()
     tName = IIf(selLV.Name = "lv1", "a", "b")
     
     For Each li In selLV.ListItems
-        newName = pFix & li.SubItems(2)
+        newName = pFix & li.SubItems(tlName)
         cn.Execute "Update " & tName & " set newName='" & newName & "' where index=" & Trim(li.Text)
-        li.SubItems(2) = newName
+        li.SubItems(tlName) = newName
     Next
     
     MsgBox "Ok your mdb signature database has been updated with the changes." & vbCrLf & _
@@ -1180,7 +1200,7 @@ Private Sub mnuRemove_Click(index As Integer)
         Set li = lvExact.ListItems(i)
         Select Case index
             Case 0: If li.Selected Then lvExact.ListItems.Remove li.index
-            Case 1: If li.SubItems(7) = "Exact CRC" Then lvExact.ListItems.Remove li.index
+            Case 1: If li.SubItems(blMatchMethod) = "Exact CRC" Then lvExact.ListItems.Remove li.index
         End Select
     Next
     
@@ -1918,11 +1938,11 @@ Function DisplayUnmatched(lv As ListView, cc As Collection)
         Set li = lv.ListItems.Add(, "id:" & c.autoid)
         li.Tag = c.autoid
         li.Text = pad(c.index, 3)
-        li.SubItems(1) = pad(c.Length)
-        li.SubItems(2) = pad(c.Calls)
-        li.SubItems(3) = pad(c.strings.Count)
-        li.SubItems(4) = c.Name
-        li.SubItems(5) = c.mCRC
+        li.SubItems(tlLength) = pad(c.Length)
+        li.SubItems(tlCalls) = pad(c.Calls)
+        li.SubItems(tlStrCnt) = pad(c.strings.Count)
+        li.SubItems(tlName) = c.Name
+        li.SubItems(tlCrc) = c.mCRC
         If i Mod 50 = 0 Then pb.value = i
         i = i + 1
     Next
@@ -2104,7 +2124,8 @@ Function StringMatch() As Long
     
     Dim ret As Long, ii As Long, jj As Long
     Dim aCnt As Long, bCnt As Long, hits As Long, isMatch As Boolean
-    Dim minMatches As Long
+    Dim minMatches As Long, requireMinLength As Boolean
+    Dim minMatchLength As Long
     
     pb.value = 0
     Label1 = "String Matching"
@@ -2122,8 +2143,12 @@ Function StringMatch() As Long
                     If isWithin(10, aCnt, bCnt) Then
                                         
                         minMatches = lowest(aCnt, bCnt)
-                        If minMatches < 3 Then
+                        If minMatches = 3 Then
                            'we must match them all
+                        ElseIf minMatches < 3 Then
+                            'they better be fairly unique then...(we could also ignore default params like dwxxx type from ida protos
+                            requireMinLength = True
+                            If minMatches = 1 Then minMatchLength = 20 Else minMatchLength = 12
                         Else
                             minMatches = (minMatches / 4) * 3 'otherwise 75% is ok
                         End If
@@ -2136,6 +2161,15 @@ Function StringMatch() As Long
                         hits = 0
                         isMatch = False
                         For Each t In c.strings
+                            
+                            If requireMinLength Then
+                                If Len(t) < minMatchLength Then GoTo nextOne
+                            End If
+                            
+'                            If minMatchLength > 0 Then
+'                                If Len(t) < minMatchLength Then GoTo nextOne
+'                            End If
+                            
                             If h.StringExists(t) Then
                                 hits = hits + 1
                                 If hits = minMatches Then
@@ -2143,6 +2177,7 @@ Function StringMatch() As Long
                                     Exit For
                                 End If
                             End If
+nextOne:
                         Next
                         
                         'If h.DumpStrings = c.DumpStrings And Not isMatch Then Stop
@@ -2615,7 +2650,7 @@ Public Sub lv2_ItemClick(ByVal Item As MSComctlLib.ListItem)
     asm = rs!disasm
     'txtB = asm
     
-    Set c = b(Item.ListSubItems(5))
+    Set c = b(Item.ListSubItems(tlCrc))
     rtfHighlightAsm asm, c, txtB
     
     Set sel_exact = Nothing
@@ -2628,7 +2663,7 @@ Public Sub lv2_ItemClick(ByVal Item As MSComctlLib.ListItem)
     End If
     
     If idaHwndB <> 0 Then
-        idaClient.JumpName Item.SubItems(2), idaHwndB
+        idaClient.JumpName Item.SubItems(tlName), idaHwndB
     End If
     
     Me.caption = "Function list 1 " & lv2.ListItems.Count & " entries"
@@ -2683,7 +2718,7 @@ Private Sub lvExact_ItemClick(ByVal Item As MSComctlLib.ListItem)
     End If
     
     If idaHwndB <> 0 Then
-        idaClient.JumpName Item.SubItems(1), idaHwndB
+        idaClient.JumpName Item.SubItems(blName2), idaHwndB
     End If
     
 End Sub
@@ -2819,16 +2854,22 @@ Private Sub mnuRename_Click(index As Integer)
     Dim tags() As String
     Dim i As Long
     Dim newName As String
+    Dim prefix As String
+    
+    If index = 0 Then
+        prefix = InputBox("Enter prefix for matches: ", , "match_")
+        If Len(prefix) = 0 Then Exit Sub
+    End If
     
     For Each li In lvExact.ListItems
         tags = Split(li.Tag, ",") 'autoid1, autoid2
         Select Case index
             Case 0: 'sequential rename of matchs - disabled for sigscan mode
                 i = i + 1
-                cn.Execute "Update a set newName='match_" & i & "' where autoid=" & tags(0)
-                cn.Execute "Update b set newName='match_" & i & "' where autoid=" & tags(1)
-                li.Text = "match_" & i
-                li.SubItems(1) = "match_" & i
+                cn.Execute "Update a set newName='" & prefix & i & "' where autoid=" & tags(0)
+                cn.Execute "Update b set newName='" & prefix & i & "' where autoid=" & tags(1)
+                li.Text = prefix & i
+                li.SubItems(1) = prefix & i
             Case 1: 'port fx names from a->b - disabled for sigscan mode
                 newName = li.Text
                 If left(newName, 3) = "sub" Then newName = "imported_" & newName 'reserved
@@ -2874,7 +2915,7 @@ Private Sub mnuTopCopyFuncNames_Click()
     If selLV Is Nothing Then Exit Sub
     
     For Each li In selLV.ListItems
-        tmp = tmp & li.SubItems(2) & vbCrLf
+        tmp = tmp & li.SubItems(tlName) & vbCrLf
     Next
     
     Clipboard.Clear

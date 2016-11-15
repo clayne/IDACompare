@@ -376,7 +376,11 @@ Function GetAllElements(lv As ListView, Optional selOnly As Boolean = False) As 
     push ret, String(50, "-")
 
     For Each li In lv.ListItems
-        tmp = li.Text & vbTab
+        If selOnly Then
+            If li.Selected Then tmp = li.Text & vbTab
+        Else
+            tmp = li.Text & vbTab
+        End If
         For i = 1 To lv.ColumnHeaders.Count - 1
             If selOnly Then
                 If li.Selected Then tmp = tmp & li.SubItems(i) & vbTab
