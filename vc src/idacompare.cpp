@@ -39,10 +39,10 @@ for addresses. this lets 32/64 bit handling be more standardized in the layers a
 
 #ifdef __EA64__
 	#pragma comment(linker, "/out:./../Ida_Compare.p64")
-	#pragma comment(lib, "D:\\idasdk65\\idasdk65\\lib\\x86_win_vc_64\\ida.lib")
+	#pragma comment(lib, "D:\\idasdk67\\idasdk67\\lib\\x86_win_vc_64\\ida.lib")
 #else
 	#pragma comment(linker, "/out:./../Ida_Compare.plw")
-	#pragma comment(lib, "D:\\idasdk65\\idasdk65\\lib\\x86_win_vc_32\\ida.lib")
+	#pragma comment(lib, "D:\\idasdk67\\idasdk67\\lib\\x86_win_vc_32\\ida.lib")
 #endif
 
 #pragma warning(disable:4996) //may be unsafe function
@@ -189,19 +189,21 @@ int  __stdcall SetName( __int64 addr, const char* name){
 void __stdcall GetName(__int64 offset, char* buf, int bufsize){
 
 	get_true_name( BADADDR, (ea_t)offset, buf, bufsize );
-
+/*
 	if(strlen(buf) == 0){
 		func_t* f = get_func((ea_t)offset);
 		if(f != NULL){
 			for(int i=0; i < f->llabelqty; i++){
-				if( f->llabels[i].ea == offset ){
-					int sz = strlen(f->llabels[i].name);
-					if(sz < bufsize) strcpy(buf,f->llabels[i].name);
-					return;
-				}
+				//if( (int)&f->llabels != 0 && (int)&f->llabels[i]!=0 ){
+					if( f->llabels[i].ea == offset ){ //was gettting a crash here once in a blue moon?
+						int sz = strlen(f->llabels[i].name);
+						if(sz < bufsize) strcpy(buf,f->llabels[i].name);
+						return;
+					}
+				//}
 			}
 		}
-	}
+	}*/
 
 }
 

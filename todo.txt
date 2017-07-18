@@ -1,4 +1,8 @@
 
+- find references from right click on top function lists
+
+implement abort
+
 exact crc results add percentage
 
 string match: so the length of the string gives it a higher weight of uniqueness..we should factor this in

@@ -21,7 +21,7 @@ Option Explicit
 
 
 Global crc As New clsCrc
-Global sort As New CAlphaSort
+Global Sort As New CAlphaSort
 Global dlg As New clsCmnDlg
 Global fso As New CFileSystem2
 Global wHash As New CWinHash
@@ -56,7 +56,7 @@ Sub rtfHighlightDecompile(c_src As String, tb As RichTextBox)
     
    'color code comments..
     For i = 0 To UBound(tmp)
-        x = Trim(tmp(i))
+        x = trim(tmp(i))
         
         a = InStr(tmp(i), "//")
         If a > 0 Then 'comment
@@ -136,7 +136,7 @@ Sub rtfHighlightAsm(asm As String, c As CFunction, tb As RichTextBox)
     
     'first we add line breaks for comments and indents for code..
     For i = 0 To UBound(tmp)
-        x = Trim(tmp(i))
+        x = trim(tmp(i))
         If right(x, 1) = ":" Then 'label
             tmp(i) = vbCrLf & x
         Else
@@ -153,7 +153,7 @@ Sub rtfHighlightAsm(asm As String, c As CFunction, tb As RichTextBox)
     
    'now we highlight
     For i = 0 To UBound(tmp)
-        x = Trim(tmp(i))
+        x = trim(tmp(i))
         
         If left(x, 1) = "j" Then 'isjump
             tb.selStart = curPos
@@ -267,7 +267,7 @@ Public Sub LV_ColumnSort(ListViewControl As ListView, Column As ColumnHeader)
               .SortOrder = lvwAscending
              End If
        End If
-       .Sorted = -1
+       .sorted = -1
     End With
 End Sub
 
@@ -354,13 +354,15 @@ Function ado(sql) As Recordset
 End Function
 
 
-Sub ResetPB(newMax, caption)
+Sub ResetPB(newMax, Optional caption)
     With Form1
         If newMax < 1 Then newMax = 1
         .pb.Max = newMax
         .pb.value = 0
-        .Label1.caption = caption
-        .Label1.Refresh
+        If Len(caption) > 0 Then
+            .Label1.caption = caption
+            .Label1.Refresh
+        End If
     End With
 End Sub
 
@@ -368,7 +370,7 @@ Function GetAllElements(lv As ListView, Optional selOnly As Boolean = False) As 
     Dim ret() As String, i As Integer, tmp As String
     Dim li As ListItem
 
-    For i = 1 To lv.ColumnHeaders.Count
+    For i = 1 To lv.ColumnHeaders.count
         tmp = tmp & lv.ColumnHeaders(i).Text & vbTab
     Next
 
@@ -381,7 +383,7 @@ Function GetAllElements(lv As ListView, Optional selOnly As Boolean = False) As 
         Else
             tmp = li.Text & vbTab
         End If
-        For i = 1 To lv.ColumnHeaders.Count - 1
+        For i = 1 To lv.ColumnHeaders.count - 1
             If selOnly Then
                 If li.Selected Then tmp = tmp & li.SubItems(i) & vbTab
             Else
@@ -405,7 +407,7 @@ Function ReadFile(filename)
    ReadFile = temp
 End Function
 
-Function writeFile(path, it) As Boolean 'this one should be binary safe...
+Function WriteFile(path, it) As Boolean 'this one should be binary safe...
     On Error GoTo hell
     Dim b() As Byte, f As Long
     If FileExists(path) Then Kill path
@@ -414,9 +416,9 @@ Function writeFile(path, it) As Boolean 'this one should be binary safe...
     Open path For Binary As #f
     Put f, , b()
     Close f
-    writeFile = True
+    WriteFile = True
     Exit Function
-hell: writeFile = False
+hell: WriteFile = False
 End Function
 
 Function lowest(ParamArray values()) As Long

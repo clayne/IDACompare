@@ -80,7 +80,7 @@ Function StandardizeAsm(ByVal asm As String) As String
             ElseIf left(tmp(j), 1) = "j" Then
                 Jumps = Jumps + 1
             ElseIf CStr(tmp(j)) Like "sub*esp,*" Then
-                k = Trim(Mid(tmp(j), InStr(tmp(j), "esp,") + 4))
+                k = trim(Mid(tmp(j), InStr(tmp(j), "esp,") + 4))
                 If InStr(k, "h") > 0 Then
                     'a = FirstOccurance(k, "+,-,*", str)
                     'If a > 0 Then
@@ -90,13 +90,13 @@ Function StandardizeAsm(ByVal asm As String) As String
                 Else
                     If IsNumeric(k) Then esp = CLng(k)
                 End If
-            ElseIf right(Trim(tmp(j)), 1) = ":" Then
-                labels.Add Mid(Trim(tmp(j)), 1, Len(Trim(tmp(j))) - 1)
+            ElseIf right(trim(tmp(j)), 1) = ":" Then
+                labels.Add Mid(trim(tmp(j)), 1, Len(trim(tmp(j))) - 1)
             End If
             
             a = InStr(tmp(j), ";")
             If a > 0 And a < Len(tmp(j)) Then
-                str = Trim(Mid(tmp(j), a + 1))
+                str = trim(Mid(tmp(j), a + 1))
                 AddUniqueString Replace(str, """", Empty)
             End If
                 
@@ -163,23 +163,24 @@ Private Sub AddCall(asm As String)
     Dim a As Long
     Dim t As String
     
-    If InStr(asm, "sub_") > 1 Then Exit Sub 'its an internal function reference no use for diffing..offsets change.
+    'disabled 7.16.17
+    'If InStr(asm, "sub_") > 1 Then Exit Sub 'its an internal function reference no use for diffing..offsets change.
     
     If InStr(asm, "ds:") > 0 Then 'is api style call
         t = Replace(asm, "ds:", "")
         t = Replace(t, "call ", "")
         If InStr(t, ";") > 0 Then t = Mid(t, 1, InStr(t, ";") - 1)
-        If Len(Trim(t)) > 3 Then 'ignore call reg32
-            fxCalls.Add Trim(t)
+        If Len(trim(t)) > 3 Then 'ignore call reg32
+            fxCalls.Add trim(t)
         End If
     ElseIf InStr(asm, ";") Then 'there is a comment its probably an "call edi ;Sleep" format
-        t = Trim(Mid(asm, InStr(asm, ";") + 1))
-        fxCalls.Add Trim(t)
+        t = trim(Mid(asm, InStr(asm, ";") + 1))
+        fxCalls.Add trim(t)
     Else
         a = InStr(asm, "call ")
         If a > 0 Then
             t = Mid(asm, a + 5)
-            fxCalls.Add Trim(t)
+            fxCalls.Add trim(t)
         End If
         
     End If
@@ -211,7 +212,7 @@ Private Sub Standardize(tmp() As String, Optional stdJmps As Boolean = True, Opt
                 
                 x = InStr(tmp(i), ";")
                 If x > 0 Then tmp(i) = Mid(tmp(i), 1, x - 1)
-                tmp(i) = Trim(tmp(i))
+                tmp(i) = trim(tmp(i))
             End If
         End If
     Next
@@ -239,13 +240,13 @@ Private Sub CheckConstant(ByVal asm)
         asm = Replace(asm, "  ", " ")
     Wend
 
-    asm = Trim(asm)
+    asm = trim(asm)
     tmp = Split(asm, " ")
     
     'If InStr(asm, ",") Then i = 2 Else i = 1
     'If UBound(tmp) < i Then Exit Sub
    
-    tmp(i) = Trim(tmp(UBound(tmp)))
+    tmp(i) = trim(tmp(UBound(tmp)))
     If right(tmp(i), 1) = "h" And Len(tmp(i)) > 3 Then
         If KeyExistsInCollection(Constants, "key:" & tmp(i)) Then
             Constants.Add tmp(i)
@@ -256,6 +257,6 @@ Private Sub CheckConstant(ByVal asm)
     
 End Sub
 
-Function ConstantExists(key) As Boolean
-    ConstantExists = KeyExistsInCollection(Constants, "key:" & key)
+Function ConstantExists(Key) As Boolean
+    ConstantExists = KeyExistsInCollection(Constants, "key:" & Key)
 End Function
